@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Perpustakaan</title>
+    <link rel="stylesheet" href="/style/style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Dashboard Perpustakaan</h1>
+      <div class="user-info">
+        <span id="userLabel">Memuat...</span>
+        <span id="roleBadge" class="role-badge"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <nav class="navbar">
+      <a href="/admin/books">Book</a>
+      <a href="/admin/author">Author</a>
+      <a href="/admin/category">Kategori</a>
+      <a href="/admin/borrow">Peminjaman</a>
+      <a href="/admin/users">User</a>
+    </nav>
+
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Daftar Author</h2>
+          <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Author</button>
+        </div>
+        <table id="authorTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Author Name</th>
+              <th>Author Country</th>
+              <th>Created At</th>
+              <th>Created By</th>
+              <th>Updated At</th>
+              <th>Updated By</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="authorBody">
+            <tr>
+              <td colspan="5" class="empty">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="error-msg" id="errorMsg" style="display: none"></p>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h3 id="modalTitle">Tambah Author</h3>
+        <input type="hidden" id="authorId" />
+
+        <label>Nama Author</label>
+        <input type="text" id="author_name" placeholder="Nama Author" />
+
+        <label>Negara Author</label>
+        <input type="number" id="author_country" placeholder="Indonesia" />
+
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal()">Batal</button>
+          <button class="save-btn" onclick="saveAuthor()">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:1140";
+
+      function setupUserInfo() {
+        const role = localStorage.getItem("role");
+
+        document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
+        document.getElementById("roleBadge").textContent = "ADMIN";
+        document.getElementById("roleBadge").className = "role-badge role-admin";
+      }
+
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
+      }
+
+      async function loadAuthors() {
+        const tbody = document.getElementById("authorBody");
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.style.display = "none";
+
+        try {
+          const res = await fetch(API_BASE + "/author", { headers: authHeaders() });
+
+          if (!res.ok) {
+            throw new Error("Gagal memuat data buku (status " + res.status + ")");
+          }
+
+          const data = await res.json();
+          const authors = Array.isArray(data) ? data : data.data || [];
+          const colspan = 8;
+
+          if (authors.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">Belum ada data author</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = "";
+          authors.forEach((author) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${author.author_id ?? "-"}</td>
+              <td>${author.author_name ?? "-"}</td>
+              <td>${author.author_country ?? "-"}</td>
+              <td>${author.created_at ? new Date(author.created_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${author.created_by ?? "-"}</td>
+              <td>${author.updated_at ? new Date(author.updated_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${author.updated_by ?? "-"}</td>
+              <td>
+                <button
+                  class="action-btn edit-btn"
+                  onclick='editAuthor(${JSON.stringify(author)})'>
+                  Edit
+                </button>
+
+                <button
+                  class="action-btn delete-btn"
+                  onclick="deleteAuthor(${author.author_id})">
+                  Hapus
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = "";
+          errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function openModal() {
+        document.getElementById("modalTitle").textContent = "Tambah Author";
+        document.getElementById("authorId").value = "";
+        document.getElementById("author_name").value = "";
+        document.getElementById("author_country").value = "";
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function editAuthor(author) {
+        document.getElementById("modalTitle").textContent = "Edit Author";
+        document.getElementById("authorId").value = author.author_id;
+        document.getElementById("author_name").value = author.author_name;
+        document.getElementById("author_country").value = author.author_country;
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("modalOverlay").classList.remove("active");
+      }
+
+      async function saveAuthor() {
+        const id = document.getElementById("authorId").value;
+        const payload = {
+          author_name: document.getElementById("author_name").value,
+          author_country: document.getElementById("author_country").value,
+        };
+
+        try {
+          const url = id ? `${API_BASE}/author/${id}` : `${API_BASE}/author`;
+          const method = id ? "PUT" : "POST";
+
+          const res = await fetch(url, {
+            method,
+            headers: authHeaders(),
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) throw new Error("Gagal menyimpan data");
+
+          closeModal();
+          loadAuthors();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteAuthor(id) {
+        if (!confirm("Hapus author ini?")) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/author/${id}`, {
+            method: "DELETE",
+            headers: authHeaders(),
+          });
+
+          if (!res.ok) throw new Error("Gagal menghapus data");
+
+          loadAuthors();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/";
+      }
+
+      function setActiveNavbar() {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll(".navbar a").forEach((link) => {
+          if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      }
+
+      setActiveNavbar();
+      setupUserInfo();
+      loadAuthors();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Perpustakaan</title>
+    <link rel="stylesheet" href="/style/style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Dashboard Perpustakaan</h1>
+      <div class="user-info">
+        <span id="userLabel">Memuat...</span>
+        <span id="roleBadge" class="role-badge"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <nav class="navbar">
+      <a href="/admin/books">Book</a>
+      <a href="/admin/author">Author</a>
+      <a href="/admin/category">Kategori</a>
+      <a href="/admin/borrow">Peminjaman</a>
+      <a href="/admin/users">User</a>
+    </nav>
+
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Daftar Peminjaman</h2>
+          <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Peminjaman</button>
+        </div>
+        <table id="borrowingTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User</th>
+              <th>Tanggal Peminjaman</th>
+              <th>Tanggal Kembali</th>
+              <th>Status</th>
+              <th>Dibuat Pada</th>
+              <th>Dibuat Oleh</th>
+              <th>Diperbarui Pada</th>
+              <th>Diperbarui Oleh</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="borrowingBody">
+            <tr>
+              <td colspan="5" class="empty">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="error-msg" id="errorMsg" style="display: none"></p>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h3 id="modalTitle">Tambah Peminjaman</h3>
+        <input type="hidden" id="borrowingId" />
+
+        <label>User ID</label>
+        <input type="number" id="user_id" placeholder="1-5" />
+
+        <label>Tanggal Peminjaman</label>
+        <input type="date" id="borrow_date" placeholder="H/B/T" />
+
+        <label>Tanggal Pengembalian</label>
+        <input type="date" id="return_date" placeholder="H/B/T" />
+
+        <label>Status</label>
+        <input type="text" id="status" placeholder="dikembalikan, dipinjam, terlambat" />
+
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal()">Batal</button>
+          <button class="save-btn" onclick="saveBorrowing()">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:1140";
+
+      function setupUserInfo() {
+        const role = localStorage.getItem("role");
+
+        document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
+        document.getElementById("roleBadge").textContent = "ADMIN";
+        document.getElementById("roleBadge").className = "role-badge role-admin";
+      }
+
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
+      }
+
+      async function loadBorrowings() {
+        const tbody = document.getElementById("borrowingBody");
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.style.display = "none";
+
+        try {
+          const res = await fetch(API_BASE + "/borrow", {
+            headers: authHeaders(),
+          });
+
+          console.log("STATUS:", res.status);
+
+          if (!res.ok) {
+            throw new Error("Gagal memuat data peminjaman (status " + res.status + ")");
+          }
+
+          const data = await res.json();
+          const borrowings = Array.isArray(data) ? data : data.data || [];
+          const colspan = 9;
+
+          if (borrowings.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="${colspan}" class="empty">
+                  Belum ada data peminjaman
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tbody.innerHTML = "";
+
+          borrowings.forEach((borrowing) => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+              <td>${borrowing.borrowing_id ?? "-"}</td>
+              <td>${borrowing.user_name ?? "-"}</td>
+              <td>${borrowing.borrow_date ? new Date(borrowing.borrow_date).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${borrowing.return_date ? new Date(borrowing.return_date).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${borrowing.status ?? "-"}</td>
+              <td>${borrowing.created_at ? new Date(borrowing.created_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${borrowing.created_by ?? "-"}</td>
+              <td>${borrowing.updated_at ? new Date(borrowing.updated_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${borrowing.updated_by ?? "-"}</td>
+              <td>
+                <button
+                  class="action-btn edit-btn"
+                  onclick='editBorrowing(${JSON.stringify(borrowing)})'>
+                  Edit
+                </button>
+
+                <button
+                  class="action-btn delete-btn"
+                  onclick="deleteBorrowing(${borrowing.borrowing_id})">
+                  Hapus
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error(err);
+
+          tbody.innerHTML = "";
+
+          errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
+
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function openModal() {
+        document.getElementById("modalTitle").textContent = "Tambah Peminjaman";
+        document.getElementById("borrowingId").value = "";
+        document.getElementById("user_id").value = "";
+        document.getElementById("borrow_date").value = "";
+        document.getElementById("return_date").value = "";
+        document.getElementById("status").value = "";
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function editBorrowing(borrowing) {
+        document.getElementById("modalTitle").textContent = "Edit Peminjaman";
+        document.getElementById("borrowingId").value = borrowing.borrowing_id;
+        document.getElementById("user_id").value = borrowing.user_id;
+        document.getElementById("borrow_date").value = borrowing.borrow_date;
+        document.getElementById("return_date").value = borrowing.return_date;
+        document.getElementById("status").value = borrowing.status;
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("modalOverlay").classList.remove("active");
+      }
+
+      async function saveBorrowing() {
+        const id = document.getElementById("borrowingId").value;
+        const payload = {
+          user_id: document.getElementById("user_id").value,
+          borrow_date: document.getElementById("borrow_date").value,
+          return_date: document.getElementById("return_date").value,
+          status: document.getElementById("status").value,
+        };
+
+        try {
+          const url = id ? `${API_BASE}/borrow/${id}` : `${API_BASE}/borrow`;
+          const method = id ? "PUT" : "POST";
+
+          const res = await fetch(url, {
+            method,
+            headers: authHeaders(),
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) throw new Error("Gagal menyimpan data");
+
+          closeModal();
+          loadBorrowings();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteBorrowing(id) {
+        if (!confirm("Hapus peminjaman ini?")) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/borrow/${id}`, {
+            method: "DELETE",
+            headers: authHeaders(),
+          });
+
+          if (!res.ok) throw new Error("Gagal menghapus data");
+
+          loadBorrowings();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/";
+      }
+
+      function setActiveNavbar() {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll(".navbar a").forEach((link) => {
+          if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      }
+
+      setActiveNavbar();
+      setupUserInfo();
+      loadBorrowings();
+    </script>
+  </body>
+</html>

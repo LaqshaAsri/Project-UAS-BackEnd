@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Perpustakaan</title>
+    <link rel="stylesheet" href="/style/style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Dashboard Perpustakaan</h1>
+      <div class="user-info">
+        <span id="userLabel">Memuat...</span>
+        <span id="roleBadge" class="role-badge"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <nav class="navbar">
+      <a href="/admin/books">Book</a>
+      <a href="/admin/author">Author</a>
+      <a href="/admin/category">Kategori</a>
+      <a href="/admin/borrow">Peminjaman</a>
+      <a href="/admin/users">User</a>
+    </nav>
+
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Daftar User</h2>
+          <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah User</button>
+        </div>
+        <table id="userTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Password</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Role</th>
+              <th>Dibuat Pada</th>
+              <th>Dibuat Oleh</th>
+              <th>Diperbarui Pada</th>
+              <th>Diperbarui Oleh</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody id="userBody">
+            <tr>
+              <td colspan="12" class="empty">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="error-msg" id="errorMsg" style="display: none"></p>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h3 id="modalTitle">Tambah User</h3>
+
+        <input type="hidden" id="userId" />
+
+        <label>Username</label>
+        <input type="text" id="user_name" />
+
+        <label>Email</label>
+        <input type="email" id="user_email" />
+
+        <label>Password</label>
+        <input type="password" id="user_password" />
+
+        <label>No. Telepon</label>
+        <input type="text" id="user_phone" />
+
+        <label>Alamat</label>
+        <input type="text" id="user_address" />
+
+        <label>Role</label>
+        <input type="text" id="role" placeholder="admin / user" />
+
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal()">Batal</button>
+          <button class="save-btn" onclick="saveUser()">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:1140";
+
+      function setupUserInfo() {
+        const role = localStorage.getItem("role");
+
+        document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
+        document.getElementById("roleBadge").textContent = "ADMIN";
+        document.getElementById("roleBadge").className = "role-badge role-admin";
+      }
+
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
+      }
+
+      async function loadUsers() {
+        const tbody = document.getElementById("userBody");
+        const errorMsg = document.getElementById("errorMsg");
+
+        errorMsg.style.display = "none";
+
+        try {
+          const res = await fetch(API_BASE + "/users", {
+            headers: authHeaders(),
+          });
+
+          if (!res.ok) {
+            throw new Error("Gagal memuat data user (status " + res.status + ")");
+          }
+
+          const data = await res.json();
+          const users = Array.isArray(data) ? data : data.data || [];
+
+          const colspan = 12;
+
+          if (users.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="${colspan}" class="empty">
+                  Belum ada data user
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tbody.innerHTML = "";
+
+          users.forEach((user) => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+              <td>${user.user_id ?? "-"}</td>
+              <td>${user.user_name ?? "-"}</td>
+              <td>${user.user_email ?? "-"}</td>
+              <td>${user.user_password ?? "-"}</td>
+              <td>${user.user_phone ?? "-"}</td>
+              <td>${user.user_address ?? "-"}</td>
+              <td>${user.role ?? "-"}</td>
+
+              <td>
+                ${user.created_at ? new Date(user.created_at).toLocaleDateString("id-ID") : "-"}
+              </td>
+
+              <td>${user.created_by ?? "-"}</td>
+
+              <td>
+                ${user.updated_at ? new Date(user.updated_at).toLocaleDateString("id-ID") : "-"}
+              </td>
+
+              <td>${user.updated_by ?? "-"}</td>
+
+              <td>
+                <button
+                  class="action-btn edit-btn"
+                  onclick='editUser(${JSON.stringify(user)})'>
+                  Edit
+                </button>
+
+                <button
+                  class="action-btn delete-btn"
+                  onclick="deleteUser(${user.user_id})">
+                  Hapus
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error(err);
+
+          tbody.innerHTML = "";
+
+          errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
+
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function openModal() {
+        document.getElementById("modalTitle").textContent = "Tambah User";
+        document.getElementById("userId").value = "";
+        document.getElementById("user_name").value = "";
+        document.getElementById("user_email").value = "";
+        document.getElementById("user_password").value = "";
+        document.getElementById("user_phone").value = "";
+        document.getElementById("user_address").value = "";
+        document.getElementById("role").value = "";
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function editUser(user) {
+        document.getElementById("modalTitle").textContent = "Edit User";
+        document.getElementById("userId").value = user.user_id;
+        document.getElementById("user_name").value = user.user_name;
+        document.getElementById("user_email").value = user.user_email;
+        document.getElementById("user_password").value = user.user_password;
+        document.getElementById("user_phone").value = user.user_phone;
+        document.getElementById("user_address").value = user.user_address;
+        document.getElementById("role").value = user.role;
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+      function closeModal() {
+        document.getElementById("modalOverlay").classList.remove("active");
+      }
+
+      async function saveUser() {
+        const id = document.getElementById("userId").value;
+
+        const payload = {
+          user_name: document.getElementById("user_name").value,
+          user_email: document.getElementById("user_email").value,
+          user_password: document.getElementById("user_password").value,
+          user_phone: document.getElementById("user_phone").value,
+          user_address: document.getElementById("user_address").value,
+          role: document.getElementById("role").value,
+        };
+
+        try {
+          const url = id ? `${API_BASE}/users/${id}` : `${API_BASE}/users`;
+
+          const method = id ? "PUT" : "POST";
+
+          const res = await fetch(url, {
+            method,
+            headers: authHeaders(),
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            throw new Error("Gagal menyimpan data");
+          }
+
+          closeModal();
+          loadUsers();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteUser(id) {
+        if (!confirm("Hapus user ini?")) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/users/${id}`, {
+            method: "DELETE",
+            headers: authHeaders(),
+          });
+
+          if (!res.ok) {
+            throw new Error("Gagal menghapus data");
+          }
+
+          loadUsers();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/";
+      }
+
+      function setActiveNavbar() {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll(".navbar a").forEach((link) => {
+          if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      }
+
+      setActiveNavbar();
+      setupUserInfo();
+      loadUsers();
+    </script>
+  </body>
+</html>

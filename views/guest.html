@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Perpustakaan</title>
+    <link rel="stylesheet" href="/style/style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Dashboard Perpustakaan</h1>
+      <div class="user-info">
+        <span id="userLabel">Memuat...</span>
+        <span id="roleBadge" class="role-badge"></span>
+        <button class="login-btn" onclick="login()">Login</button>
+      </div>
+    </header>
+
+    <nav class="navbar">
+      <a href="/guest/books">Book</a>
+    </nav>
+
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Daftar Buku</h2>
+        </div>
+        <table id="bookTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Judul</th>
+              <th>Author</th>
+              <th>Kategori</th>
+              <th>Tahun Publikasi</th>
+              <th>Stok</th>
+              <th>Dibuat Pada</th>
+              <th>Dibuat Oleh</th>
+              <th>Diperbarui Pada</th>
+              <th>Diperbarui Oleh</th>
+            </tr>
+          </thead>
+          <tbody id="bookBody">
+            <tr>
+              <td colspan="5" class="empty">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="error-msg" id="errorMsg" style="display: none"></p>
+      </div>
+    </main>
+
+    <script>
+      const API_BASE = "http://localhost:1140";
+
+      function setupUserInfo() {
+        document.getElementById("userLabel").textContent = "Login sebagai: Guest";
+        document.getElementById("roleBadge").textContent = "GUEST";
+        document.getElementById("roleBadge").className = "role-badge role-guest";
+      }
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
+      }
+
+      async function loadBooks() {
+        const tbody = document.getElementById("bookBody");
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.style.display = "none";
+
+        try {
+          const res = await fetch(API_BASE + "/books", { headers: authHeaders() });
+
+          if (!res.ok) {
+            throw new Error("Gagal memuat data buku (status " + res.status + ")");
+          }
+
+          const data = await res.json();
+          const books = Array.isArray(data) ? data : data.data || [];
+          const colspan = 11;
+
+          if (books.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">Belum ada data buku</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = "";
+          books.forEach((book) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${book.book_id ?? "-"}</td>
+              <td>${book.title ?? "-"}</td>
+              <td>${book.author_name ?? "-"}</td>
+              <td>${book.category_name ?? "-"}</td>
+              <td>${book.published_year ?? "-"}</td>
+              <td>${book.stock ?? 0}</td>
+              <td>${book.created_at ? new Date(book.created_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${book.created_by ?? "-"}</td>
+              <td>${book.updated_at ? new Date(book.updated_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${book.updated_by ?? "-"}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = "";
+          errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function login() {
+        window.location.href = "/";
+      }
+
+      function setActiveNavbar() {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll(".navbar a").forEach((link) => {
+          if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      }
+
+      setActiveNavbar();
+      setupUserInfo();
+      loadBooks();
+    </script>
+  </body>
+</html>

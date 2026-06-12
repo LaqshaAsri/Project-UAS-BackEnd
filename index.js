@@ -17,14 +17,32 @@ import categoriesRoute from "./routes/categoriesRoute.js";
 import usersRoute from "./routes/usersRoute.js";
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static("views"));
 
 // Halaman utama -> login.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  res.sendFile(path.join(__dirname, "views", "login.html"));
 });
-app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+
+app.get("/guest/books", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "guest.html"));
+});
+
+app.get("/admin/:page", (req, res) => {
+  const pages = {
+    books: "adminBooks.html",
+    author: "adminAuthors.html",
+    category: "adminCategories.html",
+    borrow: "adminBorrowings.html",
+    users: "adminUsers.html",
+  };
+  const file = pages[req.params.page];
+
+  if (!file) {
+    return res.status(404).send("Page not found");
+  }
+
+  res.sendFile(path.join(__dirname, "views", file));
 });
 
 app.use("/author", authorsRoute);
@@ -32,8 +50,8 @@ app.use("/books", booksRoute);
 app.use("/borrow", borrowingsRoute);
 app.use("/category", categoriesRoute);
 app.use("/users", usersRoute);
-app.use('/auth', authRoutes);
-
+app.use("/auth", authRoutes);
 
 app.listen(port, () => {
-  console.log(`Server running at ${hostname}:${port}`);});
+  console.log(`Server running at ${hostname}:${port}`);
+});

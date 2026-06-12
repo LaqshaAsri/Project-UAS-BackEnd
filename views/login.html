@@ -3,71 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Login Dashboard</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #1e293b, #3b82f6);
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .container {
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        width: 300px;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      }
-
-      h2 {
-        margin-bottom: 20px;
-      }
-
-      input {
-        width: 100%;
-        padding: 8px;
-        margin: 8px 0;
-        border: 1px solid #cbd5e1;
-        border-radius: 5px;
-        font-size: 14px;
-        box-sizing: border-box;
-      }
-
-      button {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-
-      .login-btn {
-        background: #22c55e;
-        color: white;
-      }
-
-      .guest-btn {
-        background: #64748b;
-        color: white;
-      }
-
-      button:hover {
-        opacity: 0.9;
-      }
-
-      .error-msg {
-        color: #ef4444;
-        font-size: 13px;
-        margin-top: 8px;
-        display: none;
-      }
-    </style>
+    <link rel="stylesheet" href="/style/login.css" />
   </head>
 
   <body>
@@ -119,9 +55,8 @@
           localStorage.setItem("token", dataLogin.token);
           localStorage.setItem("role", dataLogin.role || "user");
 
-          // arahkan ke dashboard
-          window.location.href = "dashboard.html";
-
+          // arahkan ke dashboard admin
+          window.location.href = "/admin/books";
         } catch (err) {
           console.error(err);
           errorMsg.textContent = "Tidak bisa terhubung ke server";
@@ -133,13 +68,14 @@
       async function guest() {
         try {
           // ✅ FETCH TANPA HEADER
-          const res = await fetch("http://localhost:1140/dashboard");
+          const res = await fetch("http://localhost:1140/guest/books");
 
           const html = await res.text();
 
-          document.open();
-          document.write(html);
-          document.close();
+          localStorage.clear();
+          localStorage.setItem("role", "guest");
+
+          location.href = "/guest/books";
         } catch (err) {
           console.error(err);
           alert("Error masuk guest");

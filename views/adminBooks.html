@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Perpustakaan</title>
+    <link rel="stylesheet" href="/style/style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Dashboard Perpustakaan</h1>
+      <div class="user-info">
+        <span id="userLabel">Memuat...</span>
+        <span id="roleBadge" class="role-badge"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <nav class="navbar">
+      <a href="/admin/books">Book</a>
+      <a href="/admin/author">Author</a>
+      <a href="/admin/category">Kategori</a>
+      <a href="/admin/borrow">Peminjaman</a>
+      <a href="/admin/users">User</a>
+    </nav>
+
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Daftar Buku</h2>
+          <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Buku</button>
+        </div>
+        <table id="bookTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Judul</th>
+              <th>Author</th>
+              <th>Kategori</th>
+              <th>Tahun Publikasi</th>
+              <th>Stok</th>
+              <th>Dibuat Pada</th>
+              <th>Dibuat Oleh</th>
+              <th>Diperbarui Pada</th>
+              <th>Diperbarui Oleh</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bookBody">
+            <tr>
+              <td colspan="5" class="empty">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="error-msg" id="errorMsg" style="display: none"></p>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h3 id="modalTitle">Tambah Buku</h3>
+        <input type="hidden" id="bookId" />
+
+        <label>Judul Buku</label>
+        <input type="text" id="title" placeholder="Judul buku" />
+
+        <label>Author Id</label>
+        <input type="number" id="author_id" placeholder="1-5" />
+
+        <label>Category Id</label>
+        <input type="number" id="category_id" placeholder="1-5" />
+
+        <label>Tahun Terbit</label>
+        <input type="number" id="published_year" placeholder="2024" />
+
+        <label>Stok</label>
+        <input type="number" id="stock" placeholder="0" />
+
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal()">Batal</button>
+          <button class="save-btn" onclick="saveBook()">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:1140";
+
+      function setupUserInfo() {
+        const role = localStorage.getItem("role");
+
+        document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
+        document.getElementById("roleBadge").textContent = "ADMIN";
+        document.getElementById("roleBadge").className = "role-badge role-admin";
+      }
+
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
+      }
+
+      async function loadBooks() {
+        const tbody = document.getElementById("bookBody");
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.style.display = "none";
+
+        try {
+          const res = await fetch(API_BASE + "/books", { headers: authHeaders() });
+
+          if (!res.ok) {
+            throw new Error("Gagal memuat data buku (status " + res.status + ")");
+          }
+
+          const data = await res.json();
+          const books = Array.isArray(data) ? data : data.data || [];
+          const colspan = 11;
+
+          if (books.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">Belum ada data buku</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = "";
+          books.forEach((book) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${book.book_id ?? "-"}</td>
+              <td>${book.title ?? "-"}</td>
+              <td>${book.author_name ?? "-"}</td>
+              <td>${book.category_name ?? "-"}</td>
+              <td>${book.published_year ?? "-"}</td>
+              <td>${book.stock ?? 0}</td>
+              <td>${book.created_at ? new Date(book.created_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${book.created_by ?? "-"}</td>
+              <td>${book.updated_at ? new Date(book.updated_at).toLocaleDateString("id-ID") : "-"}</td>
+              <td>${book.updated_by ?? "-"}</td>
+
+              <td>
+                <button
+                  class="action-btn edit-btn"
+                  onclick='editBook(${JSON.stringify(book)})'>
+                  Edit
+                </button>
+
+                <button
+                  class="action-btn delete-btn"
+                  onclick="deleteBook(${book.book_id})">
+                  Hapus
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = "";
+          errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function openModal() {
+        document.getElementById("modalTitle").textContent = "Tambah Buku";
+        document.getElementById("bookId").value = "";
+        document.getElementById("title").value = "";
+        document.getElementById("author_id").value = "";
+        document.getElementById("category_id").value = "";
+        document.getElementById("published_year").value = "";
+        document.getElementById("stock").value = "";
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function editBook(book) {
+        document.getElementById("modalTitle").textContent = "Edit Buku";
+        document.getElementById("bookId").value = book.book_id;
+        document.getElementById("title").value = book.title;
+        document.getElementById("author_id").value = book.author_id;
+        document.getElementById("category_id").value = book.category_id;
+        document.getElementById("published_year").value = book.published_year;
+        document.getElementById("stock").value = book.stock;
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("modalOverlay").classList.remove("active");
+      }
+
+      async function saveBook() {
+        const id = document.getElementById("bookId").value;
+        const payload = {
+          title: document.getElementById("title").value,
+          author_id: document.getElementById("author_id").value,
+          category_id: document.getElementById("category_id").value,
+          published_year: document.getElementById("published_year").value,
+          stock: document.getElementById("stock").value,
+        };
+
+        try {
+          const url = id ? `${API_BASE}/books/${id}` : `${API_BASE}/books`;
+          const method = id ? "PUT" : "POST";
+
+          const res = await fetch(url, {
+            method,
+            headers: authHeaders(),
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) throw new Error("Gagal menyimpan data");
+
+          closeModal();
+          loadBooks();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteBook(id) {
+        if (!confirm("Hapus buku ini?")) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/books/${id}`, {
+            method: "DELETE",
+            headers: authHeaders(),
+          });
+
+          if (!res.ok) throw new Error("Gagal menghapus data");
+
+          loadBooks();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/";
+      }
+
+      function setActiveNavbar() {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll(".navbar a").forEach((link) => {
+          if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      }
+
+      setActiveNavbar();
+      setupUserInfo();
+      loadBooks();
+    </script>
+  </body>
+</html>

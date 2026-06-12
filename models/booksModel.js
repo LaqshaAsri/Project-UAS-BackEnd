@@ -1,7 +1,27 @@
 import db from "../config/db.js";
 
 const getAllBooks = (callback) => {
-  let query = "SELECT * FROM books";
+  let query = `
+    SELECT
+      b.book_id,
+      b.title,
+      b.author_id,
+      a.author_name,
+      b.category_id,
+      c.category_name,
+      b.published_year,
+      b.stock,
+      b.created_at,
+      b.created_by,
+      b.updated_at,
+      b.updated_by
+    FROM books b
+    LEFT JOIN authors a
+      ON b.author_id = a.author_id
+    LEFT JOIN categories c
+      ON b.category_id = c.category_id
+  `;
+
   db.query(query, (err, result) => {
     callback(err, result);
   });

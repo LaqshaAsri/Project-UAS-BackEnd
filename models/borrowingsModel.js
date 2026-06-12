@@ -1,7 +1,23 @@
 import db from "../config/db.js";
 
 const getAllBorrowings = (callback) => {
-  let query = "SELECT * FROM borrowings";
+  const query = `
+    SELECT
+      b.borrowing_id,
+      b.user_id,
+      u.user_name,
+      b.borrow_date,
+      b.return_date,
+      b.STATUS,
+      b.created_at,
+      b.created_by,
+      b.updated_at,
+      b.updated_by
+    FROM borrowings b
+    LEFT JOIN users u
+      ON b.user_id = u.user_id
+  `;
+
   db.query(query, (err, result) => {
     callback(err, result);
   });
