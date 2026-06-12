@@ -14,6 +14,14 @@ const getUserById = (id, callback) => {
   });
 };
 
+export const findUserByEmail = (email, callback) => {
+  const query = "SELECT * FROM users WHERE user_email = ?";
+  db.query(query, [email], (err, result) => {
+    if (err) return callback(err, null);
+    callback(null, result[0]);
+  });
+};
+
 const getUsersByQuery = ({ q, page = 1, limit = 5 }, callback) => {
   const offset = (page - 1) * limit;
 
@@ -63,5 +71,5 @@ const deleteAllUsers = (callback) => {
 };
 
 export default {
-  getAllUsers, getUserById, getUsersByQuery, createUser, updateUser, deleteUser, deleteAllUsers,
+  getAllUsers, getUserById, findUserByEmail, getUsersByQuery, createUser, updateUser, deleteUser, deleteAllUsers,
 };

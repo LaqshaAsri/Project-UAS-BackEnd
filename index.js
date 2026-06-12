@@ -1,8 +1,15 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-const hostname = "127.0.0.1";
+const hostname = "localhost";
 const port = 1140;
 
+import authRoutes from "./routes/authRoute.js";
 import authorsRoute from "./routes/authorsRoute.js";
 import booksRoute from "./routes/booksRoute.js";
 import borrowingsRoute from "./routes/borrowingsRoute.js";
@@ -10,12 +17,23 @@ import categoriesRoute from "./routes/categoriesRoute.js";
 import usersRoute from "./routes/usersRoute.js";
 
 app.use(express.json());
+app.use(express.static("public"));
+
+// Halaman utama -> login.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
 app.use("/author", authorsRoute);
 app.use("/books", booksRoute);
 app.use("/borrow", borrowingsRoute);
 app.use("/category", categoriesRoute);
 app.use("/users", usersRoute);
+app.use('/auth', authRoutes);
+
 
 app.listen(port, () => {
-  console.log(`Server running at ${hostname}:${port}`);
-});
+  console.log(`Server running at ${hostname}:${port}`);});

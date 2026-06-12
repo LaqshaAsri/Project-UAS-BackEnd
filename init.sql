@@ -1,16 +1,18 @@
 -- Buat Database
-CREATE DATABASE library_db;
+CREATE DATABASE IF NOT EXISTS library_db;
 
 USE library_db;
 
 -- Tabel Users
 CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_name VARCHAR(100) NOT NULL,
-    user_email VARCHAR(100) UNIQUE,
-    user_phone VARCHAR(20),
-    user_address TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  user_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_name VARCHAR(100),
+  user_email VARCHAR(100) UNIQUE NOT NULL,
+  user_password VARCHAR(255) NOT NULL,
+  user_phone VARCHAR(20),
+  user_address VARCHAR(255),
+  role ENUM('admin', 'user') DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabel Authors
@@ -32,71 +34,45 @@ CREATE TABLE books (
     title VARCHAR(255) NOT NULL,
     author_id INT,
     category_id INT,
-    published_year Year,
+    published_year YEAR,
     stock INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES authors(author_id) ON DELETE
-    SET
-        NULL ON UPDATE CASCADE,
-        FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE
-    SET
-        NULL ON UPDATE CASCADE
+    FOREIGN KEY (author_id) REFERENCES authors(author_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- Tabel Borrowings
 CREATE TABLE borrowings (
-    borrowing_id int AUTO_INCREMENT PRIMARY KEY,
-    user_id int,
-    borrow_date date,
-    return_date date,
-    STATUS enum('dipinjam', 'dikembalikan', 'terlambat') DEFAULT 'dikembalikan',
+    borrowing_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    borrow_date DATE,
+    return_date DATE,
+    STATUS ENUM('dipinjam', 'dikembalikan', 'terlambat') DEFAULT 'dikembalikan',
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Contoh Data
 -- Users
-INSERT INTO
-    users(user_name, user_email, user_phone, user_address)
+-- PENTING: ganti '$PASSWORD_HASH' di bawah dengan hasil hash dari generateHash.js
+INSERT INTO users (user_name, user_email, user_password, user_phone, user_address, role)
 VALUES
-    (
-        'Laqsha',
-        'laqsha@gmail.com',
-        '08123456789',
-        'Medan'
-    ),
-    (
-        'Arsad',
-        'arsad@gmail.com',
-        '08231434521',
-        'Jakarta'
-    ),
-    (
-        'Marcellino',
-        'marcellino@gmail.com',
-        '08231434522',
-        'Kalimantan'
-    ),
-    (
-        'Ziham',
-        'ziham@gmail.com',
-        '08231434523',
-        'Maluku'
-    ),
-    ('Andi', 'andi@gmail.com', '08231434524', 'Bali');
+    ('Laqsha', 'laqsha@gmail.com', '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK', '08123456789', 'Medan', 'admin'),
+    ('Arsad', 'arsad@gmail.com', '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK', '08231434521', 'Jakarta', 'user'),
+    ('Marcellino', 'marcellino@gmail.com', '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK', '08231434522', 'Kalimantan', 'user'),
+    ('Ziham', 'ziham@gmail.com', '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK', '08231434523', 'Maluku', 'user'),
+    ('Andi', 'andi@gmail.com', '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK', '08231434524', 'Bali', 'user');
 
 -- Authors
-INSERT INTO
-    authors(author_name, author_country)
+INSERT INTO authors (author_name, author_country)
 VALUES
     ('Tere Liye', 'Indonesia'),
     ('J.K Rowling', 'UK'),
     ('Andrea Hirata', 'Indonesia'),
-    ("George Orwell", 'UK'),
+    ('George Orwell', 'UK'),
     ('Haruki Murakami', 'Japan');
 
 -- Categories
-INSERT INTO
-    categories (category_name)
+INSERT INTO categories (category_name)
 VALUES
     ('Novel'),
     ('Fantasy'),
@@ -105,14 +81,7 @@ VALUES
     ('Mystery');
 
 -- Books
-INSERT INTO
-    books (
-        title,
-        author_id,
-        category_id,
-        published_year,
-        stock
-    )
+INSERT INTO books (title, author_id, category_id, published_year, stock)
 VALUES
     ('Bumi', 1, 1, 2014, 10),
     ('Harry Potter', 2, 2, 1997, 5),
@@ -121,8 +90,7 @@ VALUES
     ('Kafka on the Shore', 5, 5, 2002, 7);
 
 -- Borrowings
-INSERT INTO
-    borrowings (user_id, borrow_date, return_date, STATUS)
+INSERT INTO borrowings (user_id, borrow_date, return_date, STATUS)
 VALUES
     (1, '2026-04-01', '2026-04-10', 'dikembalikan'),
     (2, '2026-04-15', NULL, 'dipinjam'),

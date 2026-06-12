@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Perpustakaan</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f1f5f9;
+      }
+
+      header {
+        background: #1e293b;
+        color: white;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .user-info {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .role-badge {
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .role-admin {
+        background: #fef08a;
+        color: #92400e;
+      }
+
+      .role-guest {
+        background: #e2e8f0;
+        color: #475569;
+      }
+
+      .logout-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .logout-btn:hover {
+        opacity: 0.9;
+      }
+
+      main {
+        padding: 30px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .add-btn {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .add-btn:hover {
+        opacity: 0.9;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      th, td {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #475569;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .empty {
+        text-align: center;
+        color: #94a3b8;
+        padding: 20px;
+      }
+
+      .error-msg {
+        color: #ef4444;
+        padding: 10px 0;
+      }
+
+      .action-btn {
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        color: white;
+        margin-right: 5px;
+      }
+
+      .edit-btn { background: #f59e0b; }
+      .delete-btn { background: #ef4444; }
+      .action-btn:hover { opacity: 0.85; }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.4);
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 320px;
+      }
+
+      .modal h3 {
+        margin-top: 0;
+      }
+
+      .modal label {
+        display: block;
+        font-size: 13px;
+        margin-top: 10px;
+        color: #475569;
+      }
+
+      .modal input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        border: 1px solid #cbd5e1;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
+      .modal-actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .modal-actions button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .save-btn { background: #22c55e; color: white; }
+      .cancel-btn { background: #94a3b8; color: white; }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>📚 Dashboard Perpustakaan</h1>
+      <div class="user-info">
+        <span id="userLabel">Memuat...</span>
+        <span id="roleBadge" class="role-badge"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Daftar Buku</h2>
+          <button class="add-btn" id="addBtn" style="display:none;" onclick="openModal()">+ Tambah Buku</button>
+        </div>
+        <table id="bookTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Judul</th>
+              <th>Tahun</th>
+              <th>Stok</th>
+              <th id="actionHeader" style="display:none;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bookBody">
+            <tr><td colspan="5" class="empty">Memuat data...</td></tr>
+          </tbody>
+        </table>
+        <p class="error-msg" id="errorMsg" style="display:none;"></p>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h3 id="modalTitle">Tambah Buku</h3>
+        <input type="hidden" id="bookId" />
+
+        <label>Judul Buku</label>
+        <input type="text" id="title" placeholder="Judul buku" />
+
+        <label>Tahun Terbit</label>
+        <input type="number" id="published_year" placeholder="2024" />
+
+        <label>Stok</label>
+        <input type="number" id="stock" placeholder="0" />
+
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal()">Batal</button>
+          <button class="save-btn" onclick="saveBook()">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:1140";
+      let isAdmin = false;
+
+      function setupUserInfo() {
+        const token = localStorage.getItem("token");
+        const role = localStorage.getItem("role");
+        const userLabel = document.getElementById("userLabel");
+        const roleBadge = document.getElementById("roleBadge");
+
+        if (token) {
+          isAdmin = role === "admin";
+          userLabel.textContent = "Login sebagai: " + (role || "user");
+          roleBadge.textContent = isAdmin ? "ADMIN" : "USER";
+          roleBadge.className = "role-badge " + (isAdmin ? "role-admin" : "role-guest");
+        } else {
+          userLabel.textContent = "Mode Guest";
+          roleBadge.textContent = "GUEST";
+          roleBadge.className = "role-badge role-guest";
+        }
+
+        if (isAdmin) {
+          document.getElementById("addBtn").style.display = "inline-block";
+          document.getElementById("actionHeader").style.display = "table-cell";
+        }
+      }
+
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token
+          ? { "Content-Type": "application/json", Authorization: "Bearer " + token }
+          : { "Content-Type": "application/json" };
+      }
+
+      async function loadBooks() {
+        const tbody = document.getElementById("bookBody");
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.style.display = "none";
+
+        try {
+          const res = await fetch(API_BASE + "/books", { headers: authHeaders() });
+
+          if (!res.ok) {
+            throw new Error("Gagal memuat data buku (status " + res.status + ")");
+          }
+
+          const data = await res.json();
+          const books = Array.isArray(data) ? data : (data.data || []);
+          const colspan = isAdmin ? 5 : 4;
+
+          if (books.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">Belum ada data buku</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = "";
+          books.forEach((book) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${book.book_id ?? "-"}</td>
+              <td>${book.title ?? "-"}</td>
+              <td>${book.published_year ?? "-"}</td>
+              <td><span class="badge">${book.stock ?? 0}</span></td>
+              ${isAdmin ? `
+              <td>
+                <button class="action-btn edit-btn" onclick='editBook(${JSON.stringify(book)})'>Edit</button>
+                <button class="action-btn delete-btn" onclick="deleteBook(${book.book_id})">Hapus</button>
+              </td>` : ""}
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = "";
+          errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
+          errorMsg.style.display = "block";
+        }
+      }
+
+      function openModal() {
+        document.getElementById("modalTitle").textContent = "Tambah Buku";
+        document.getElementById("bookId").value = "";
+        document.getElementById("title").value = "";
+        document.getElementById("published_year").value = "";
+        document.getElementById("stock").value = "";
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function editBook(book) {
+        document.getElementById("modalTitle").textContent = "Edit Buku";
+        document.getElementById("bookId").value = book.book_id;
+        document.getElementById("title").value = book.title;
+        document.getElementById("published_year").value = book.published_year;
+        document.getElementById("stock").value = book.stock;
+        document.getElementById("modalOverlay").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("modalOverlay").classList.remove("active");
+      }
+
+      async function saveBook() {
+        const id = document.getElementById("bookId").value;
+        const payload = {
+          title: document.getElementById("title").value,
+          published_year: document.getElementById("published_year").value,
+          stock: document.getElementById("stock").value,
+        };
+
+        try {
+          const url = id ? `${API_BASE}/books/${id}` : `${API_BASE}/books`;
+          const method = id ? "PUT" : "POST";
+
+          const res = await fetch(url, {
+            method,
+            headers: authHeaders(),
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) throw new Error("Gagal menyimpan data");
+
+          closeModal();
+          loadBooks();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteBook(id) {
+        if (!confirm("Hapus buku ini?")) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/books/${id}`, {
+            method: "DELETE",
+            headers: authHeaders(),
+          });
+
+          if (!res.ok) throw new Error("Gagal menghapus data");
+
+          loadBooks();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "login.html";
+      }
+
+      setupUserInfo();
+      loadBooks();
+    </script>
+  </body>
+</html>
