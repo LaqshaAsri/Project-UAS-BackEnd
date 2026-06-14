@@ -4,17 +4,118 @@
     <meta charset="UTF-8" />
     <title>Login Dashboard</title>
     <link rel="stylesheet" href="/style/login.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #1e293b, #3b82f6);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        width: 320px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      }
+
+      h2 { margin-bottom: 5px; }
+
+      .subtitle {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 20px;
+      }
+
+      input {
+        width: 100%;
+        padding: 9px;
+        margin: 6px 0;
+        border: 1px solid #cbd5e1;
+        border-radius: 5px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 13px;
+        font-weight: bold;
+      }
+
+      .btn-admin { background: #1e293b; color: white; }
+      .btn-member { background: #3b82f6; color: white; }
+      button:hover { opacity: 0.88; }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 14px 0;
+        color: #94a3b8;
+        font-size: 13px;
+      }
+      .divider::before, .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e2e8f0;
+      }
+
+      .btn-guest {
+        width: 100%;
+        background: #f1f5f9;
+        color: #475569;
+        margin-bottom: 4px;
+      }
+
+      .btn-register {
+        width: 100%;
+        background: #22c55e;
+        color: white;
+      }
+
+      .error-msg {
+        color: #ef4444;
+        font-size: 13px;
+        margin-top: 10px;
+        display: none;
+      }
+    </style>
   </head>
 
   <body>
     <div class="container">
-      <h2>Login Dashboard</h2>
+      <h2>Perpustakaan</h2>
+      <p class="subtitle">Masuk ke akun kamu</p>
 
       <input type="email" id="email" placeholder="Email" />
       <input type="password" id="password" placeholder="Password" />
 
-      <button class="login-btn" onclick="login()">Login</button>
-      <button class="guest-btn" onclick="guest()">Masuk sebagai Guest</button>
+      <div class="btn-group">
+        <button class="btn-admin" onclick="loginAs('admin')">Login Admin</button>
+        <button class="btn-member" onclick="loginAs('user')">Login Member</button>
+      </div>
+
+      <div class="divider">atau</div>
+
+      <button class="btn-guest" onclick="guest()">Masuk sebagai Guest</button>
+      <button class="btn-register" onclick="window.location.href='/register'">Daftar Akun Baru</button>
 
       <p class="error-msg" id="errorMsg"></p>
     </div>
@@ -22,7 +123,7 @@
     <script>
       const API_BASE = "http://localhost:1140";
 
-      async function login() {
+      async function loginAs(expectedRole) {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
         const errorMsg = document.getElementById("errorMsg");
@@ -35,28 +136,36 @@
         }
 
         try {
-          const resLogin = await fetch(API_BASE + "/auth/login", {
+          const res = await fetch(API_BASE + "/auth/login", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
           });
 
-          const dataLogin = await resLogin.json();
+          const data = await res.json();
 
-          if (!resLogin.ok) {
-            errorMsg.textContent = dataLogin.message || "Login gagal";
+          if (!res.ok) {
+            errorMsg.textContent = data.message || "Login gagal";
             errorMsg.style.display = "block";
             return;
           }
 
-          // simpan token & role
-          localStorage.setItem("token", dataLogin.token);
-          localStorage.setItem("role", dataLogin.role || "user");
+          // 'member' di tombol disesuaikan ke 'user' di DB
+const roleMap = { admin: 'admin', member: 'user' };
+if (data.role !== roleMap[expectedRole]) {
+  errorMsg.textContent = `Akun ini bukan ${expectedRole === 'admin' ? 'Admin' : 'Member'}`;
+          }
 
-          // arahkan ke dashboard admin
-          window.location.href = "/admin/books";
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("role", data.role);
+
+          // Arahkan sesuai role
+          if (data.role === "admin") {
+            window.location.href = "/admin/books";
+          } else {
+            window.location.href = "/guest/books";
+          }
+
         } catch (err) {
           console.error(err);
           errorMsg.textContent = "Tidak bisa terhubung ke server";
@@ -64,25 +173,11 @@
         }
       }
 
-      // MODE GUEST (tanpa login)
-      async function guest() {
-        try {
-          // ✅ FETCH TANPA HEADER
-          const res = await fetch("http://localhost:1140/guest/books");
-
-          const html = await res.text();
-
-          localStorage.clear();
-          localStorage.setItem("role", "guest");
-
-          location.href = "/guest/books";
-        } catch (err) {
-          console.error(err);
-          alert("Error masuk guest");
-        }
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
+      function guest() {
+        localStorage.clear();
+        localStorage.setItem("role", "guest");
+        window.location.href = "/guest/books";
       }
     </script>
   </body>
-</html>
+</html> 
