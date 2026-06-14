@@ -14,16 +14,19 @@ router.get("/", (req, res) => {
           error: err.message,
         });
       }
-      if (result.length === 0) {
-        return res.status(404).json({
-          status: 404,
+      if (result.data.length === 0) {
+        return res.status(200).json({
+          status: 200,
           message: "Data author tidak ditemukan",
+          total: 0,
+          data: [],
         });
       }
       return res.status(200).json({
         status: 200,
         message: "Berhasil mengambil data",
-        data: result,
+        total: result.total,
+        data: result.data,
       });
     });
   } else {
@@ -36,8 +39,8 @@ router.get("/", (req, res) => {
         });
       }
       if (result.length === 0) {
-        return res.status(404).json({
-          status: 404,
+        return res.status(200).json({
+          status: 200,
           message: "Data author tidak ditemukan",
         });
       }

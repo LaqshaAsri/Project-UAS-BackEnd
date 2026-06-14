@@ -17,19 +17,36 @@ const getAuthorById = (id, callback) => {
 const getAuthorsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
   const offset = (page - 1) * limit;
 
-  let sql = "SELECT * FROM authors";
+  let whereClause = "";
   let values = [];
 
   if (q) {
-    sql += " WHERE author_name LIKE ?";
+    whereClause = `WHERE author_name LIKE ? OR author_country LIKE ?`;
+    values.push(`%${q}%`);
     values.push(`%${q}%`);
   }
 
-  sql += " LIMIT ? OFFSET ?";
-  values.push(parseInt(limit), parseInt(offset));
+  const countSql = `SELECT COUNT(*) AS total FROM authors ${whereClause}`;
 
-  db.query(sql, values, (err, result) => {
-    callback(err, result);
+  db.query(countSql, values, (err, countResult) => {
+    if (err) return callback(err);
+
+    const total = countResult[0].total;
+
+    let dataSql = `SELECT * FROM authors ${whereClause} LIMIT ? OFFSET ?`;
+
+    let dataValues = [...values];
+    dataValues.push(parseInt(limit));
+    dataValues.push(parseInt(offset));
+
+    db.query(dataSql, dataValues, (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, {
+        total,
+        data: result,
+      });
+    });
   });
 };
 

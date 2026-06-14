@@ -28,7 +28,11 @@
       <div class="card">
         <div class="card-header">
           <h2>Daftar Buku</h2>
-          <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Buku</button>
+          <div class="header-actions">
+            <input type="text" id="searchBook" placeholder="Cari book..." />
+            <button onclick="searchBooks()">Cari</button>
+            <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Buku</button>
+          </div>
         </div>
         <table id="bookTable">
           <thead>
@@ -52,6 +56,7 @@
             </tr>
           </tbody>
         </table>
+        <div id="pagination" class="pagination"></div>
         <p class="error-msg" id="errorMsg" style="display: none"></p>
       </div>
     </main>
@@ -83,29 +88,15 @@
       </div>
     </div>
 
+    <script src="/js/admin.js"></script>
     <script>
-      const API_BASE = "http://localhost:1140";
-
-      function setupUserInfo() {
-        const role = localStorage.getItem("role");
-
-        document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
-        document.getElementById("roleBadge").textContent = "ADMIN";
-        document.getElementById("roleBadge").className = "role-badge role-admin";
-      }
-
-      function authHeaders() {
-        const token = localStorage.getItem("token");
-        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
-      }
-
-      async function loadBooks() {
+      async function loadBooks(page = 1, q = "") {
         const tbody = document.getElementById("bookBody");
         const errorMsg = document.getElementById("errorMsg");
         errorMsg.style.display = "none";
 
         try {
-          const res = await fetch(API_BASE + "/books", { headers: authHeaders() });
+          const res = await fetch(`${API_BASE}/books?q=${encodeURIComponent(q)}&page=${page}&limit=${currentLimit}`, { headers: authHeaders() });
 
           if (!res.ok) {
             throw new Error("Gagal memuat data buku (status " + res.status + ")");
@@ -113,10 +104,19 @@
 
           const data = await res.json();
           const books = Array.isArray(data) ? data : data.data || [];
+          totalData = data.total || 0;
           const colspan = 11;
 
           if (books.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">Belum ada data buku</td></tr>`;
+            const message = currentSearch ? "Data tidak ditemukan" : "Belum ada data buku";
+
+            tbody.innerHTML = `
+             <tr>
+              <td colspan="${colspan}" class="empty">${message}</td>
+             </tr>
+            `;
+
+            renderPagination();
             return;
           }
 
@@ -151,12 +151,20 @@
             `;
             tbody.appendChild(tr);
           });
+          renderPagination();
         } catch (err) {
           console.error(err);
           tbody.innerHTML = "";
           errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
           errorMsg.style.display = "block";
         }
+      }
+
+      function searchBooks() {
+        currentSearch = document.getElementById("searchBook").value;
+        currentPage = 1;
+
+        loadBooks(currentPage, currentSearch);
       }
 
       function openModal() {
@@ -179,10 +187,6 @@
         document.getElementById("published_year").value = book.published_year;
         document.getElementById("stock").value = book.stock;
         document.getElementById("modalOverlay").classList.add("active");
-      }
-
-      function closeModal() {
-        document.getElementById("modalOverlay").classList.remove("active");
       }
 
       async function saveBook() {
@@ -231,25 +235,24 @@
         }
       }
 
-      function logout() {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        window.location.href = "/";
-      }
+      document.getElementById("searchBook").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          searchBooks();
+        }
+      });
 
-      function setActiveNavbar() {
-        const currentPath = window.location.pathname;
-
-        document.querySelectorAll(".navbar a").forEach((link) => {
-          if (link.getAttribute("href") === currentPath) {
-            link.classList.add("active");
-          }
-        });
+      function changePage(page) {
+        currentPage = page;
+        if (page < 1 || page > totalPages) {
+          return;
+        }
+        currentPage = page;
+        loadBooks(currentPage, currentSearch);
       }
 
       setActiveNavbar();
       setupUserInfo();
-      loadBooks();
+      loadBooks(currentPage, currentSearch);
     </script>
   </body>
 </html>

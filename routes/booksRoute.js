@@ -17,16 +17,19 @@ router.get("/", (req, res) => {
           error: err.message,
         });
       }
-      if (result.length === 0) {
-        return res.status(404).json({
-          status: 404,
+      if (result.data.length === 0) {
+        return res.status(200).json({
+          status: 200,
           message: "Data buku tidak ditemukan",
+          total: 0,
+          data: [],
         });
       }
       return res.status(200).json({
         status: 200,
         message: "Berhasil mengambil data",
-        data: result,
+        total: result.total,
+        data: result.data,
       });
     });
   } else {
@@ -37,6 +40,12 @@ router.get("/", (req, res) => {
           status: 500,
           message: "Terjadi kesalahan pada server",
           error: err.message,
+        });
+      }
+      if (result.length === 0) {
+        return res.status(200).json({
+          status: 200,
+          message: "Data buku tidak ditemukan",
         });
       }
       return res.status(200).json({
@@ -61,7 +70,7 @@ router.get("/:id", (req, res) => {
     if (result.length === 0) {
       return res.status(404).json({
         status: 404,
-        message: "Data tidak ditemukan" 
+        message: "Data tidak ditemukan",
       });
     }
     res.status(200).json({
@@ -75,83 +84,97 @@ router.get("/:id", (req, res) => {
 router.post("/", (req, res) => {
   const book = req.body;
   booksModel.addBook(book, (err, result) => {
-    if (err) return res.status(500).json({
-      status: 500,
-      message: "Terjadi kesalahan pada server",
-      error: err.message
-    });
+    if (err)
+      return res.status(500).json({
+        status: 500,
+        message: "Terjadi kesalahan pada server",
+        error: err.message,
+      });
 
-    if (result.affectedRows === 0) return res.status(400).json({
-      status: 400,
-      message: "Isi buku tidak valid"
-    });
-    
-    if (result.length > 0) return res.status(400).json({
-      status: 400,
-      message: "Buku sudah ada"
-    });
-    res.status(201).json({ 
+    if (result.affectedRows === 0)
+      return res.status(400).json({
+        status: 400,
+        message: "Isi buku tidak valid",
+      });
+
+    if (result.length > 0)
+      return res.status(400).json({
+        status: 400,
+        message: "Buku sudah ada",
+      });
+    res.status(201).json({
       status: 201,
-      message: "Buku berhasil ditambahkan", book_id: result.insertId });
+      message: "Buku berhasil ditambahkan",
+      book_id: result.insertId,
+    });
   });
 });
 
 router.put("/:id", (req, res) => {
   const book = { ...req.body, book_id: req.params.id };
   booksModel.updateBook(book, (err, result) => {
-    if (err) return res.status(500).json({
-      status: 500,
-      message: "Terjadi kesalahan pada server",
-      error: err.message
-    });
+    if (err)
+      return res.status(500).json({
+        status: 500,
+        message: "Terjadi kesalahan pada server",
+        error: err.message,
+      });
     if (!book.title || !book.author_id || !book.category_id || !book.published_year || !book.stock) {
       return res.status(400).json({
         status: 400,
-        message: "Isi buku tidak valid"
+        message: "Isi buku tidak valid",
       });
     }
-    if (result.affectedRows === 0) return res.status(404).json({
-      status: 404,
-      message: "Data tidak ditemukan"
-    });
-    res.json({ 
+    if (result.affectedRows === 0)
+      return res.status(404).json({
+        status: 404,
+        message: "Data tidak ditemukan",
+      });
+    res.json({
       status: 200,
-      message: "Buku berhasil diupdate" });
+      message: "Buku berhasil diupdate",
+    });
   });
 });
 
 router.delete("/:id", (req, res) => {
   const id = req.params.id;
   booksModel.deleteBook(id, (err, result) => {
-    if (err) return res.status(500).json({
-      status: 500,
-      message: "Terjadi kesalahan pada server",
-      error: err.message
+    if (err)
+      return res.status(500).json({
+        status: 500,
+        message: "Terjadi kesalahan pada server",
+        error: err.message,
+      });
+    if (result.affectedRows === 0)
+      return res.status(404).json({
+        status: 404,
+        message: "Data tidak ditemukan",
+      });
+    res.json({
+      status: 200,
+      message: "Buku berhasil dihapus",
     });
-    if (result.affectedRows === 0) return res.status(404).json({
-      status: 404,
-      message: "Data tidak ditemukan"
-    });
-    res.json({ 
-      status: 200, 
-      message: "Buku berhasil dihapus" });
   });
 });
 
 router.delete("/", (req, res) => {
   booksModel.deleteAllBooks((err, result) => {
-    if (err) return res.status(500).json({
-      status: 500,
-      message: "Terjadi kesalahan pada server",
-      error: err.message
+    if (err)
+      return res.status(500).json({
+        status: 500,
+        message: "Terjadi kesalahan pada server",
+        error: err.message,
+      });
+    if (result.affectedRows === 0)
+      return res.status(404).json({
+        status: 404,
+        message: "Data tidak ditemukan",
+      });
+    res.json({
+      status: 200,
+      message: "buku berhasil dihapus semua",
     });
-    if (result.affectedRows === 0) return res.status(404).json({
-      status: 404,
-      message: "Data tidak ditemukan"
-    });
-    res.json({ 
-      status: 200, 
-      message: "buku berhasil dihapus semua" });
   });
 });
 

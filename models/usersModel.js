@@ -25,20 +25,39 @@ export const findUserByEmail = (email, callback) => {
 const getUsersByQuery = ({ q, page = 1, limit = 5 }, callback) => {
   const offset = (page - 1) * limit;
 
-  let sql = "SELECT * FROM users";
+  let whereClause = "";
   let values = [];
 
   if (q) {
-    sql += " WHERE user_name LIKE ? OR user_email LIKE ? OR user_phone LIKE ? OR user_address LIKE ?";
-    const keyword = `%${q}%`;
-    values.push(keyword, keyword, keyword, keyword);
+    whereClause = " WHERE user_name LIKE ? OR user_email LIKE ? OR user_phone LIKE ? OR user_address LIKE ? OR role LIKE ?";
+    values.push(`%${q}%`);
+    values.push(`%${q}%`);
+    values.push(`%${q}%`);
+    values.push(`%${q}%`);
+    values.push(`%${q}%`);
   }
 
-  sql += " LIMIT ? OFFSET ?";
-  values.push(parseInt(limit), parseInt(offset));
+  const countSql = `SELECT COUNT(*) AS total FROM users ${whereClause}`;
 
-  db.query(sql, values, (err, result) => {
-    callback(err, result);
+  db.query(countSql, values, (err, countResult) => {
+    if (err) return callback(err);
+
+    const total = countResult[0].total;
+
+    let dataSql = `SELECT * FROM users ${whereClause} LIMIT ? OFFSET ?`;
+
+    let dataValues = [...values];
+    dataValues.push(parseInt(limit));
+    dataValues.push(parseInt(offset));
+
+    db.query(dataSql, dataValues, (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, {
+        total,
+        data: result,
+      });
+    });
   });
 };
 
@@ -71,5 +90,12 @@ const deleteAllUsers = (callback) => {
 };
 
 export default {
-  getAllUsers, getUserById, findUserByEmail, getUsersByQuery, createUser, updateUser, deleteUser, deleteAllUsers,
+  getAllUsers,
+  getUserById,
+  findUserByEmail,
+  getUsersByQuery,
+  createUser,
+  updateUser,
+  deleteUser,
+  deleteAllUsers,
 };
