@@ -17,21 +17,36 @@ const getCategorybyId = (id, callback) => {
 const getCategoriesbyQuery = ({ q, page = 1, limit = 5 }, callback) => {
   const offset = (page - 1) * limit;
 
-  let sql = "SELECT * FROM categories";
+  let whereClause = "";
   let values = [];
 
   // Filter
   if (q) {
-    sql += " WHERE category_name LIKE ?";
+    whereClause = " WHERE category_name LIKE ?";
     values.push(`%${q}%`);
   }
 
-  // Pagination
-  sql += " LIMIT ? OFFSET ?";
-  values.push(parseInt(limit), parseInt(offset));
+  const countSql = `SELECT COUNT(*) AS total FROM categories ${whereClause}`;
+  db.query(countSql, values, (err, countResult) => {
+    if (err) return callback(err);
 
-  db.query(sql, values, (err, result) => {
-    callback(err, result);
+    const total = countResult[0].total;
+
+    // Pagination
+    let dataSql = `SELECT * FROM categories ${whereClause} LIMIT ? OFFSET ?`;
+
+    let dataValues = [...values];
+    dataValues.push(parseInt(limit));
+    dataValues.push(parseInt(offset));
+
+    db.query(dataSql, dataValues, (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, {
+        total,
+        data: result,
+      });
+    });
   });
 };
 

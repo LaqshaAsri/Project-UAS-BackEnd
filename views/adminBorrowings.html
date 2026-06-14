@@ -28,7 +28,12 @@
       <div class="card">
         <div class="card-header">
           <h2>Daftar Peminjaman</h2>
-          <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Peminjaman</button>
+
+          <div class="header-actions">
+            <input type="text" id="searchBorrowing" placeholder="Cari peminjaman..." />
+            <button onclick="searchBorrowings()">Cari</button>
+            <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Peminjaman</button>
+          </div>
         </div>
         <table id="borrowingTable">
           <thead>
@@ -51,6 +56,7 @@
             </tr>
           </tbody>
         </table>
+        <div id="pagination" class="pagination"></div>
         <p class="error-msg" id="errorMsg" style="display: none"></p>
       </div>
     </main>
@@ -79,33 +85,15 @@
       </div>
     </div>
 
+    <script src="/js/admin.js"></script>
     <script>
-      const API_BASE = "http://localhost:1140";
-
-      function setupUserInfo() {
-        const role = localStorage.getItem("role");
-
-        document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
-        document.getElementById("roleBadge").textContent = "ADMIN";
-        document.getElementById("roleBadge").className = "role-badge role-admin";
-      }
-
-      function authHeaders() {
-        const token = localStorage.getItem("token");
-        return token ? { "Content-Type": "application/json", Authorization: "Bearer " + token } : { "Content-Type": "application/json" };
-      }
-
-      async function loadBorrowings() {
+      async function loadBorrowings(page = 1, q = "") {
         const tbody = document.getElementById("borrowingBody");
         const errorMsg = document.getElementById("errorMsg");
         errorMsg.style.display = "none";
 
         try {
-          const res = await fetch(API_BASE + "/borrow", {
-            headers: authHeaders(),
-          });
-
-          console.log("STATUS:", res.status);
+          const res = await fetch(`${API_BASE}/borrow?q=${encodeURIComponent(q)}&page=${page}&limit=${currentLimit}`, { headers: authHeaders() });
 
           if (!res.ok) {
             throw new Error("Gagal memuat data peminjaman (status " + res.status + ")");
@@ -113,21 +101,23 @@
 
           const data = await res.json();
           const borrowings = Array.isArray(data) ? data : data.data || [];
+          totalData = data.total || 0;
           const colspan = 9;
 
           if (borrowings.length === 0) {
+            const message = currentSearch ? "Data tidak ditemukan" : "Belum ada data author";
+
             tbody.innerHTML = `
-              <tr>
-                <td colspan="${colspan}" class="empty">
-                  Belum ada data peminjaman
-                </td>
-              </tr>
+             <tr>
+              <td colspan="${colspan}" class="empty">${message}</td>
+             </tr>
             `;
+
+            renderPagination();
             return;
           }
 
           tbody.innerHTML = "";
-
           borrowings.forEach((borrowing) => {
             const tr = document.createElement("tr");
 
@@ -136,7 +126,7 @@
               <td>${borrowing.user_name ?? "-"}</td>
               <td>${borrowing.borrow_date ? new Date(borrowing.borrow_date).toLocaleDateString("id-ID") : "-"}</td>
               <td>${borrowing.return_date ? new Date(borrowing.return_date).toLocaleDateString("id-ID") : "-"}</td>
-              <td>${borrowing.status ?? "-"}</td>
+              <td>${borrowing.STATUS ?? "-"}</td>
               <td>${borrowing.created_at ? new Date(borrowing.created_at).toLocaleDateString("id-ID") : "-"}</td>
               <td>${borrowing.created_by ?? "-"}</td>
               <td>${borrowing.updated_at ? new Date(borrowing.updated_at).toLocaleDateString("id-ID") : "-"}</td>
@@ -157,15 +147,20 @@
             `;
             tbody.appendChild(tr);
           });
+          renderPagination();
         } catch (err) {
           console.error(err);
-
           tbody.innerHTML = "";
-
           errorMsg.textContent = err.message || "Terjadi kesalahan saat memuat data";
-
           errorMsg.style.display = "block";
         }
+      }
+
+      function searchBorrowings() {
+        currentSearch = document.getElementById("searchBorrowing").value;
+        currentPage = 1;
+
+        loadBorrowings(currentPage, currentSearch);
       }
 
       function openModal() {
@@ -184,12 +179,8 @@
         document.getElementById("user_id").value = borrowing.user_id;
         document.getElementById("borrow_date").value = borrowing.borrow_date;
         document.getElementById("return_date").value = borrowing.return_date;
-        document.getElementById("status").value = borrowing.status;
+        document.getElementById("status").value = borrowing.STATUS;
         document.getElementById("modalOverlay").classList.add("active");
-      }
-
-      function closeModal() {
-        document.getElementById("modalOverlay").classList.remove("active");
       }
 
       async function saveBorrowing() {
@@ -237,25 +228,24 @@
         }
       }
 
-      function logout() {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        window.location.href = "/";
-      }
+      document.getElementById("searchBorrowing").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          searchBorrowings();
+        }
+      });
 
-      function setActiveNavbar() {
-        const currentPath = window.location.pathname;
-
-        document.querySelectorAll(".navbar a").forEach((link) => {
-          if (link.getAttribute("href") === currentPath) {
-            link.classList.add("active");
-          }
-        });
+      function changePage(page) {
+        currentPage = page;
+        if (page < 1 || page > totalPages) {
+          return;
+        }
+        currentPage = page;
+        loadBorrowings(currentPage, currentSearch);
       }
 
       setActiveNavbar();
       setupUserInfo();
-      loadBorrowings();
+      loadBorrowings(currentPage, currentSearch);
     </script>
   </body>
 </html>
