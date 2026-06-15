@@ -7,11 +7,36 @@ let currentLimit = 2;
 let currentSearch = "";
 
 function setupUserInfo() {
+  const username = localStorage.getItem("user_name");
   const role = localStorage.getItem("role");
 
-  document.getElementById("userLabel").textContent = "Login sebagai: " + (role || "admin");
-  document.getElementById("roleBadge").textContent = "ADMIN";
-  document.getElementById("roleBadge").className = "role-badge role-admin";
+  const userLabel = document.getElementById("userLabel");
+  const roleBadge = document.getElementById("roleBadge");
+
+  if (!userLabel) return;
+
+  if (role === "admin") {
+    userLabel.textContent = "Login sebagai: " + username;
+
+    if (roleBadge) {
+      roleBadge.textContent = "ADMIN";
+      roleBadge.className = "role-badge role-admin";
+    }
+  } else if (role === "user") {
+    userLabel.textContent = "Login sebagai: " + username;
+
+    if (roleBadge) {
+      roleBadge.textContent = "Member";
+      roleBadge.className = "role-badge role-member";
+    }
+  } else {
+    userLabel.textContent = "Login sebagai: Guest";
+
+    if (roleBadge) {
+      roleBadge.textContent = "GUEST";
+      roleBadge.className = "role-badge role-guest";
+    }
+  }
 }
 
 function authHeaders() {
@@ -30,6 +55,7 @@ function login() {
 function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
+  localStorage.removeItem("user_name");
   window.location.href = "/";
 }
 

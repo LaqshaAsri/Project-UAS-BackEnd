@@ -161,14 +161,9 @@
             return;
           }
 
-          // 'member' di tombol disesuaikan ke 'user' di DB
-          const roleMap = { admin: "admin", member: "user" };
-          if (data.role !== roleMap[expectedRole]) {
-            errorMsg.textContent = `Akun ini bukan ${expectedRole === "admin" ? "Admin" : "Member"}`;
-          }
-
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("role", data.role);
+          // simpan token & role
+          localStorage.setItem("token", dataLogin.token);
+          localStorage.setItem("role", dataLogin.role || "user");
 
           // Arahkan sesuai role
           if (data.role === "admin") {
