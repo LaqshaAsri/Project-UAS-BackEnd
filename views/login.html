@@ -21,10 +21,12 @@
         border-radius: 10px;
         width: 320px;
         text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       }
 
-      h2 { margin-bottom: 5px; }
+      h2 {
+        margin-bottom: 5px;
+      }
 
       .subtitle {
         font-size: 13px;
@@ -58,9 +60,17 @@
         font-weight: bold;
       }
 
-      .btn-admin { background: #1e293b; color: white; }
-      .btn-member { background: #3b82f6; color: white; }
-      button:hover { opacity: 0.88; }
+      .btn-admin {
+        background: #1e293b;
+        color: white;
+      }
+      .btn-member {
+        background: #3b82f6;
+        color: white;
+      }
+      button:hover {
+        opacity: 0.88;
+      }
 
       .divider {
         display: flex;
@@ -70,7 +80,8 @@
         color: #94a3b8;
         font-size: 13px;
       }
-      .divider::before, .divider::after {
+      .divider::before,
+      .divider::after {
         content: "";
         flex: 1;
         height: 1px;
@@ -115,7 +126,7 @@
       <div class="divider">atau</div>
 
       <button class="btn-guest" onclick="guest()">Masuk sebagai Guest</button>
-      <button class="btn-register" onclick="window.location.href='/register'">Daftar Akun Baru</button>
+      <button class="btn-register" onclick="window.location.href = '/register'">Daftar Akun Baru</button>
 
       <p class="error-msg" id="errorMsg"></p>
     </div>
@@ -151,6 +162,7 @@
           }
 
           // 'member' di tombol disesuaikan ke 'user' di DB
+
           const roleMap = { admin: 'admin', member: 'user' };
           if (data.role !== expectedRole) {
           errorMsg.textContent = `Akun ini bukan ${expectedRole === 'admin' ? 'Admin' : 'Member'}`;
@@ -167,7 +179,6 @@
           } else {
             window.location.href = "/guest/books";
           }
-
         } catch (err) {
           console.error(err);
           errorMsg.textContent = "Tidak bisa terhubung ke server";
@@ -182,4 +193,4 @@
       }
     </script>
   </body>
-</html> 
+</html>
