@@ -161,9 +161,17 @@
             return;
           }
 
-          // simpan token & role
-          localStorage.setItem("token", dataLogin.token);
-          localStorage.setItem("role", dataLogin.role || "user");
+          // 'member' di tombol disesuaikan ke 'user' di DB
+
+          const roleMap = { admin: "admin", member: "user" };
+          if (data.role !== expectedRole) {
+            errorMsg.textContent = `Akun ini bukan ${expectedRole === "admin" ? "Admin" : "Member"}`;
+            errorMsg.style.display = "block";
+            return; // ← ini yang kurang, supaya berhenti dan tidak redirect
+          }
+
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("role", data.role);
 
           // Arahkan sesuai role
           if (data.role === "admin") {
