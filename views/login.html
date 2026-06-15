@@ -54,6 +54,7 @@
           // simpan token & role
           localStorage.setItem("token", dataLogin.token);
           localStorage.setItem("role", dataLogin.role || "user");
+          localStorage.setItem("user_name", dataLogin.user.user_name);
 
           // arahkan ke dashboard admin
           window.location.href = "/admin/books";
