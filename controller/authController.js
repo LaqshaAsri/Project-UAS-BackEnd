@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { findUserByEmail } from "../models/usersModel.js";
+import { findUserByEmail, createUser } from "../models/usersModel.js";
 import usersModel from "../models/usersModel.js";
 const JWT_SECRET = "rahasia-super-aman"; // sebaiknya pindahkan ke .env
 

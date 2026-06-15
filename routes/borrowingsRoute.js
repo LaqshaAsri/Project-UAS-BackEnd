@@ -4,8 +4,26 @@ import { verifyToken } from "../controller/authController.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get("/", verifyToken, (req, res) => {
   const { q, page, limit } = req.query;
+  const user_id = req.user.id;
+  const user_role = req.user.role;
+
+  if (user_role === "user") {
+    borrowingsModel.getAllBorrowings((err, result) => {
+      if (err) {
+        return res.status(500).json({ status: 500, message: "Terjadi kesalahan pada server", error: err.message });
+      }
+      const myBorrowings = result.filter((b) => b.user_id === user_id);
+
+      return res.status(200).json({
+        status: 200,
+        message: "Berhasil mengambil data peminjaman milik Anda",
+        data: myBorrowings,
+      });
+    });
+    return;
+  }
 
   if (q || page || limit) {
     borrowingsModel.getBorrowingsByQuery({ q, page, limit }, (err, result) => {
@@ -124,7 +142,7 @@ router.post("/borrowing", verifyToken, (req, res) => {
     }
     res.status(201).json({
       status: 201,
-      message: "Buku berhasil dipinjam secara otomatis!",
+      message: "Buku berhasil dipinjam!",
       id: result.insertId,
     });
   });
