@@ -6,6 +6,8 @@ const getAllBorrowings = (callback) => {
       b.borrowing_id,
       b.user_id,
       u.user_name,
+      b.book_id,
+      bk.title AS book_title,
       b.borrow_date,
       b.return_date,
       b.STATUS,
@@ -14,8 +16,8 @@ const getAllBorrowings = (callback) => {
       b.updated_at,
       b.updated_by
     FROM borrowings b
-    LEFT JOIN users u
-      ON b.user_id = u.user_id
+    LEFT JOIN users u ON b.user_id = u.user_id
+    LEFT JOIN books bk ON b.book_id = bk.book_id
   `;
 
   db.query(query, (err, result) => {
@@ -30,25 +32,30 @@ const getBorrowingById = (id, callback) => {
   });
 };
 
+// Fungsi pencarian khusus untuk member (mengecek buku apa saja yang dipinjam oleh user tertentu)
+const getActiveBorrowingByMember = (userId, bookId, callback) => {
+  let query = "SELECT * FROM borrowings WHERE user_id = ? AND book_id = ? AND STATUS = 'dipinjam' LIMIT 1";
+  db.query(query, [userId, bookId], (err, result) => {
+    if (err) return callback(err);
+    callback(null, result[0] || null);
+  });
+};
+
 const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
   const offset = (page - 1) * limit;
-
   let whereClause = "";
   let values = [];
 
   if (q) {
-    whereClause = `WHERE u.user_name LIKE ? OR b.STATUS LIKE ? OR b.borrow_date LIKE ? OR b.return_date LIKE ?`;
-    values.push(`%${q}%`);
-    values.push(`%${q}%`);
-    values.push(`%${q}%`);
-    values.push(`%${q}%`);
+    whereClause = `WHERE u.user_name LIKE ? OR bk.title LIKE ? OR b.STATUS LIKE ?`;
+    values.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
 
   const countSql = `
     SELECT COUNT(*) AS total
     FROM borrowings b
-    LEFT JOIN users u
-      ON b.user_id = u.user_id
+    LEFT JOIN users u ON b.user_id = u.user_id
+    LEFT JOIN books bk ON b.book_id = bk.book_id
     ${whereClause}
   `;
 
@@ -62,6 +69,8 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
         b.borrowing_id,
         b.user_id,
         u.user_name,
+        b.book_id,
+        bk.title AS book_title,
         b.borrow_date,
         b.return_date,
         b.STATUS,
@@ -70,39 +79,36 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
         b.updated_at,
         b.updated_by
       FROM borrowings b
-      LEFT JOIN users u
-        ON b.user_id = u.user_id
+      LEFT JOIN users u ON b.user_id = u.user_id
+      LEFT JOIN books bk ON b.book_id = bk.book_id
       ${whereClause}
+      ORDER BY b.borrowing_id DESC
       LIMIT ? OFFSET ?
     `;
 
-    const dataValues = [...values];
-    dataValues.push(parseInt(limit));
-    dataValues.push(parseInt(offset));
+    const dataValues = [...values, parseInt(limit), parseInt(offset)];
 
     db.query(dataSql, dataValues, (err, result) => {
       if (err) return callback(err);
-
-      callback(null, {
-        total,
-        data: result,
-      });
+      callback(null, { total, data: result });
     });
   });
 };
 
 const createBorrowing = (data, callback) => {
-  let query = "INSERT INTO borrowings (user_id, borrow_date, return_date, STATUS) VALUES (?, ?, ?, ?)";
-  let returnDate = data.return_date ? data.return_date : null;
-  db.query(query, [data.user_id, data.borrow_date, returnDate, data.STATUS], (err, result) => {
+  let query = `
+    INSERT INTO borrowings 
+      (user_id, book_id, borrow_date, return_date, STATUS, created_by, updated_by) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  db.query(query, [data.user_id, data.book_id, data.borrow_date, data.return_date, data.STATUS, data.created_by, data.updated_by], (err, result) => {
     callback(err, result);
   });
 };
 
 const updateBorrowing = (id, data, callback) => {
-  let query = "UPDATE borrowings SET return_date = ?, STATUS = ? WHERE borrowing_id = ?";
-  let returnDate = data.return_date ? data.return_date : null;
-  db.query(query, [returnDate, data.STATUS, id], (err, result) => {
+  let query = "UPDATE borrowings SET return_date = ?, STATUS = ?, updated_by = ? WHERE borrowing_id = ?";
+  db.query(query, [data.return_date, data.STATUS, data.updated_by, id], (err, result) => {
     callback(err, result);
   });
 };
@@ -121,4 +127,13 @@ const deleteAllBorrowings = (callback) => {
   });
 };
 
-export default { getAllBorrowings, getBorrowingById, getBorrowingsByQuery, createBorrowing, updateBorrowing, deleteBorrowing, deleteAllBorrowings };
+export default {
+  getAllBorrowings,
+  getBorrowingById,
+  getActiveBorrowingByMember,
+  getBorrowingsByQuery,
+  createBorrowing,
+  updateBorrowing,
+  deleteBorrowing,
+  deleteAllBorrowings,
+};

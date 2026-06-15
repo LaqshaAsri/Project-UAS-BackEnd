@@ -63,6 +63,7 @@ CREATE TABLE books (
 CREATE TABLE borrowings (
     borrowing_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
+    book_id INT,
     borrow_date DATE,
     return_date DATE,
     STATUS ENUM('dipinjam', 'dikembalikan', 'terlambat') DEFAULT 'dikembalikan',
@@ -70,7 +71,8 @@ CREATE TABLE borrowings (
     created_by VARCHAR(45),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(45),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(book_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Contoh Data
@@ -165,10 +167,16 @@ VALUES
 
 -- Borrowings
 INSERT INTO
-    borrowings (user_id, borrow_date, return_date, STATUS)
+    borrowings (
+        user_id,
+        book_id,
+        borrow_date,
+        return_date,
+        STATUS
+    )
 VALUES
-    (1, '2026-04-01', '2026-04-10', 'dikembalikan'),
-    (2, '2026-04-15', NULL, 'dipinjam'),
-    (1, '2026-04-18', NULL, 'dipinjam'),
-    (2, '2026-03-20', '2026-03-30', 'dikembalikan'),
-    (1, '2026-04-05', '2026-04-12', 'terlambat');
+    (1, 3, '2026-04-01', '2026-04-10', 'dikembalikan'),
+    (2, 4, '2026-04-15', NULL, 'dipinjam'),
+    (1, 1, '2026-04-18', NULL, 'dipinjam'),
+    (2, 2, '2026-03-20', '2026-03-30', 'dikembalikan'),
+    (1, 2, '2026-04-05', '2026-04-12', 'terlambat');

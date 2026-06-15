@@ -27,7 +27,6 @@
           <div class="header-actions">
             <input type="text" id="searchBook" placeholder="Cari book..." />
             <button onclick="searchBooks()">Cari</button>
-            <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Buku</button>
           </div>
         </div>
         <table id="bookTable">
@@ -43,6 +42,7 @@
               <th>Dibuat Oleh</th>
               <th>Diperbarui Pada</th>
               <th>Diperbarui Oleh</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody id="bookBody">
@@ -64,6 +64,15 @@
         errorMsg.style.display = "none";
 
         try {
+          const borrowRes = await fetch(`${API_BASE}/borrow`, { headers: authHeaders() });
+          let activeBorrowings = [];
+          if (borrowRes.ok) {
+            const borrowData = await borrowRes.json();
+            const allBorrowings = Array.isArray(borrowData) ? borrowData : borrowData.data || [];
+            activeBorrowings = allBorrowings.filter((b) => b.STATUS === "dipinjam");
+          }
+
+          // 2. Ambil data buku seperti biasa
           const res = await fetch(`${API_BASE}/books?q=${encodeURIComponent(q)}&page=${page}&limit=${currentLimit}`, { headers: authHeaders() });
 
           if (!res.ok) {
@@ -82,6 +91,8 @@
 
           tbody.innerHTML = "";
           books.forEach((book) => {
+            const isCurrentlyBorrowed = activeBorrowings.some((b) => b.book_id === book.book_id);
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
               <td>${book.book_id ?? "-"}</td>
@@ -94,6 +105,13 @@
               <td>${book.created_by ?? "-"}</td>
               <td>${book.updated_at ? new Date(book.updated_at).toLocaleDateString("id-ID") : "-"}</td>
               <td>${book.updated_by ?? "-"}</td>
+              <td>
+                <button
+                  class="action-btn ${isCurrentlyBorrowed ? "btn-return" : "btn-borrow"}"
+                  onclick='toggleBorrowReturn(${JSON.stringify(book)}, ${isCurrentlyBorrowed})'>
+                  ${isCurrentlyBorrowed ? "Kembalikan" : "Pinjam"}
+                </button>
+              </td>
             `;
             tbody.appendChild(tr);
           });
@@ -106,10 +124,40 @@
         }
       }
 
+      async function toggleBorrowReturn(book, isCurrentlyBorrowed) {
+        const endpoint = isCurrentlyBorrowed ? "/borrow/returning" : "/borrow/borrowing";
+        const konfirmasiTeks = isCurrentlyBorrowed ? `Apakah Anda ingin mengembalikan buku "${book.title}"?` : `Apakah Anda ingin meminjam buku "${book.title}" selama 7 hari ke depan?`;
+
+        if (!confirm(konfirmasiTeks)) return;
+
+        try {
+          const res = await fetch(`${API_BASE}${endpoint}`, {
+            method: "POST",
+            headers: {
+              ...authHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ book_id: book.book_id }),
+          });
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            throw new Error(result.message || `Gagal memproses (Status ${res.status})`);
+          }
+
+          alert(result.message);
+          loadBooks(currentPage, currentSearch);
+        } catch (err) {
+          alert(err.message);
+          alert("Terjadi kesalahan sistem: " + err.message);
+          console.error("Detail Error:", err);
+        }
+      }
+
       function searchBooks() {
         currentSearch = document.getElementById("searchBook").value;
         currentPage = 1;
-
         loadBooks(currentPage, currentSearch);
       }
 
@@ -120,10 +168,7 @@
       });
 
       function changePage(page) {
-        currentPage = page;
-        if (page < 1 || page > totalPages) {
-          return;
-        }
+        if (page < 1 || page > totalPages) return;
         currentPage = page;
         loadBooks(currentPage, currentSearch);
       }

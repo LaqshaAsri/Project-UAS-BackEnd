@@ -27,7 +27,7 @@ function setupUserInfo() {
 
     if (roleBadge) {
       roleBadge.textContent = "Member";
-      roleBadge.className = "role-badge role-member";
+      roleBadge.className = "role-badge role-admin";
     }
   } else {
     userLabel.textContent = "Login sebagai: Guest";
