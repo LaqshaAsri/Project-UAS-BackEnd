@@ -39,7 +39,6 @@ const getBookbyQuery = ({ q, page = 1, limit = 5 }, callback) => {
 
   let whereClause = "";
   let values = [];
-  //-----filter---------//
   if (q) {
     whereClause = `WHERE b.title LIKE ? OR a.author_name LIKE ? OR c.category_name LIKE ? OR b.published_year LIKE ? OR b.stock LIKE ?`;
     values.push(`%${q}%`);
@@ -63,7 +62,6 @@ const getBookbyQuery = ({ q, page = 1, limit = 5 }, callback) => {
 
     const total = countResult[0].total;
 
-    //-----pagination---------//
     let dataSql = `
       SELECT
         b.book_id,
@@ -101,16 +99,22 @@ const getBookbyQuery = ({ q, page = 1, limit = 5 }, callback) => {
     });
   });
 };
-//-----------------------method ------------------------//
-// add - update - delete //
 
 const addBook = (book, callback) => {
   let query = `
-    INSERT INTO books (title, author_id, category_id, published_year, stock)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO books (title, author_id, category_id, published_year, stock, created_by, updated_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const values = [book.title, book.author_id, book.category_id, book.published_year, book.stock];
+  const values = [
+    book.title,
+    book.author_id,
+    book.category_id,
+    book.published_year,
+    book.stock,
+    book.created_by,
+    book.updated_by,
+  ];
 
   db.query(query, values, (err, result) => {
     callback(err, result);
@@ -118,8 +122,9 @@ const addBook = (book, callback) => {
 };
 
 const updateBook = (book, callback) => {
+  const { book_id, ...dataToUpdate } = book;
   let query = "UPDATE books SET ? WHERE book_id = ?";
-  db.query(query, [book, book.book_id], (err, result) => {
+  db.query(query, [dataToUpdate, book_id], (err, result) => {
     callback(err, result);
   });
 };

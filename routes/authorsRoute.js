@@ -1,6 +1,7 @@
 import express from "express";
 const router = express.Router();
 import authorsModel from "../models/authorsModel.js";
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 router.get("/", (req, res) => {
   const { q, page, limit } = req.query;
@@ -77,14 +78,24 @@ router.get("/:id", (req, res) => {
   });
 });
 
-router.post("/", (req, res) => {
-  const data = req.body;
-  if (!data.author_name) {
+// CREATE - wajib login
+router.post("/", verifyToken, (req, res) => {
+  const { author_name, author_country } = req.body;
+
+  if (!author_name) {
     return res.status(400).json({
       status: 400,
       message: "author_name wajib diisi",
     });
   }
+
+  const data = {
+    author_name,
+    author_country,
+    created_by: req.user.email,
+    updated_by: req.user.email,
+  };
+
   authorsModel.createAuthor(data, (err, result) => {
     if (err) {
       return res.status(500).json({
@@ -101,15 +112,25 @@ router.post("/", (req, res) => {
   });
 });
 
-router.put("/:id", (req, res) => {
+// UPDATE - wajib login
+router.put("/:id", verifyToken, (req, res) => {
   const id = req.params.id;
-  const data = req.body;
-  if (!data.author_name || !data.author_country) {
+  const { author_name, author_country } = req.body;
+
+  if (!author_name || !author_country) {
     return res.status(400).json({
       status: 400,
       message: "author_name dan author_country wajib diisi",
     });
   }
+
+  const data = {
+    author_name,
+    author_country,
+    updated_by: req.user.email,
+    updated_at: new Date(),
+  };
+
   authorsModel.updateAuthor(id, data, (err, result) => {
     if (err) {
       return res.status(500).json({
@@ -131,7 +152,8 @@ router.put("/:id", (req, res) => {
   });
 });
 
-router.delete("/:id", (req, res) => {
+// DELETE - wajib login
+router.delete("/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   authorsModel.deleteAuthor(id, (err, result) => {
     if (err) {
@@ -154,7 +176,7 @@ router.delete("/:id", (req, res) => {
   });
 });
 
-router.delete("/", (req, res) => {
+router.delete("/", verifyToken, (req, res) => {
   authorsModel.deleteAllAuthors((err, result) => {
     if (err) {
       return res.status(500).json({

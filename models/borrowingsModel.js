@@ -92,17 +92,17 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
 };
 
 const createBorrowing = (data, callback) => {
-  let query = "INSERT INTO borrowings (user_id, borrow_date, return_date, STATUS) VALUES (?, ?, ?, ?)";
+  let query = "INSERT INTO borrowings (user_id, borrow_date, return_date, STATUS, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)";
   let returnDate = data.return_date ? data.return_date : null;
-  db.query(query, [data.user_id, data.borrow_date, returnDate, data.STATUS], (err, result) => {
+  db.query(query, [data.user_id, data.borrow_date, returnDate, data.STATUS, data.created_by, data.updated_by], (err, result) => {
     callback(err, result);
   });
 };
 
 const updateBorrowing = (id, data, callback) => {
-  let query = "UPDATE borrowings SET return_date = ?, STATUS = ? WHERE borrowing_id = ?";
+  let query = "UPDATE borrowings SET return_date = ?, STATUS = ?, updated_by = ? WHERE borrowing_id = ?";
   let returnDate = data.return_date ? data.return_date : null;
-  db.query(query, [returnDate, data.STATUS, id], (err, result) => {
+  db.query(query, [returnDate, data.STATUS, data.updated_by, id], (err, result) => {
     callback(err, result);
   });
 };

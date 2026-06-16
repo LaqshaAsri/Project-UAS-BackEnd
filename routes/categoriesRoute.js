@@ -1,12 +1,12 @@
 import express from "express";
 const router = express.Router();
 import categoriesModel from "../models/categoriesModel.js";
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 router.get("/", (req, res) => {
   const { q, page, limit } = req.query;
 
   if (q || page || limit) {
-    // Query / Pagination
     categoriesModel.getCategoriesbyQuery({ q, page, limit }, (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -31,7 +31,6 @@ router.get("/", (req, res) => {
       });
     });
   } else {
-    // Tanpa Query / Pagination
     categoriesModel.getAllCategories((err, result) => {
       if (err) {
         return res.status(500).json({
@@ -80,15 +79,17 @@ router.get("/:id", (req, res) => {
   });
 });
 
-router.post("/", (req, res) => {
-  const data = req.body;
-  if (!data.category_name) {
+router.post("/", verifyToken, (req, res) => {
+  const { category_name } = req.body;
+
+  if (!category_name) {
     return res.status(400).json({
       status: 400,
       message: "category_name wajib diisi",
     });
   }
-  categoriesModel.cekCategoryByName(data.category_name, (err, result) => {
+
+  categoriesModel.cekCategoryByName(category_name, (err, result) => {
     if (err) {
       return res.status(500).json({
         status: 500,
@@ -102,6 +103,13 @@ router.post("/", (req, res) => {
         message: "Category Name sudah ada",
       });
     }
+
+    const data = {
+      category_name,
+      created_by: req.user.email,
+      updated_by: req.user.email,
+    };
+
     categoriesModel.createCategory(data, (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -119,15 +127,22 @@ router.post("/", (req, res) => {
   });
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", verifyToken, (req, res) => {
   const id = req.params.id;
-  const data = req.body;
-  if (!data.category_name) {
+  const { category_name } = req.body;
+
+  if (!category_name) {
     return res.status(400).json({
       status: 400,
       message: "category_name wajib diisi",
     });
   }
+
+  const data = {
+    category_name,
+    updated_by: req.user.email,
+  };
+
   categoriesModel.updateCategory(id, data, (err, result) => {
     if (err) {
       return res.status(500).json({
@@ -146,7 +161,7 @@ router.put("/:id", (req, res) => {
   });
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   categoriesModel.deleteCategorybyId(id, (err, result) => {
     if (err) {
@@ -166,7 +181,7 @@ router.delete("/:id", (req, res) => {
   });
 });
 
-router.delete("/", (req, res) => {
+router.delete("/", verifyToken, (req, res) => {
   categoriesModel.deleteAllCategories((err, result) => {
     if (err) {
       return res.status(500).json({

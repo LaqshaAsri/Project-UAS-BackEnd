@@ -51,8 +51,8 @@ const getCategoriesbyQuery = ({ q, page = 1, limit = 5 }, callback) => {
 };
 
 const createCategory = (data, callback) => {
-  let query = `INSERT INTO categories (category_name) VALUES ("${data.category_name}")`;
-  db.query(query, (err, result) => {
+  let query = "INSERT INTO categories SET ?";
+  db.query(query, data, (err, result) => {
     callback(err, result);
   });
 };
@@ -65,15 +65,15 @@ const cekCategoryByName = (name, callback) => {
 };
 
 const updateCategory = (id, data, callback) => {
-  let query = `UPDATE categories SET category_name = "${data.category_name}" WHERE category_id = ` + id;
-  db.query(query, (err, result) => {
+  let query = "UPDATE categories SET ? WHERE category_id = ?";
+  db.query(query, [data, id], (err, result) => {
     callback(err, result);
   });
 };
 
 const deleteCategorybyId = (id, callback) => {
-  let query = "DELETE FROM categories WHERE category_id = " + id;
-  db.query(query, (err, result) => {
+  let query = "DELETE FROM categories WHERE category_id = ?";
+  db.query(query, [id], (err, result) => {
     callback(err, result);
   });
 };

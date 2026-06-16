@@ -17,7 +17,6 @@ import categoriesRoute from "./routes/categoriesRoute.js";
 import usersRoute from "./routes/usersRoute.js";
 
 app.use(express.json());
-app.use(express.static("views"));
 
 // Halaman utama -> login.html
 app.get("/", (req, res) => {
@@ -49,6 +48,8 @@ app.get("/admin/:page", (req, res) => {
 
   res.sendFile(path.join(__dirname, "views", file));
 });
+
+app.use(express.static(path.join(__dirname, "views")));
 
 app.use("/author", authorsRoute);
 app.use("/books", booksRoute);

@@ -1,6 +1,7 @@
 import express from "express";
 const router = express.Router();
 import borrowingsModel from "../models/borrowingsModel.js";
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 router.get("/", (req, res) => {
   const { q, page, limit } = req.query;
@@ -78,8 +79,9 @@ router.get("/:id", (req, res) => {
   });
 });
 
-router.post("/", (req, res) => {
+router.post("/", verifyToken, (req, res) => {
   const data = req.body;
+
   if (!data.user_id || !data.borrow_date || !data.STATUS) {
     return res.status(400).json({
       status: 400,
@@ -99,6 +101,10 @@ router.post("/", (req, res) => {
       message: "return_date wajib diisi jika STATUS dikembalikan atau terlambat",
     });
   }
+
+  data.created_by = req.user.email;
+  data.updated_by = req.user.email;
+
   borrowingsModel.createBorrowing(data, (err, result) => {
     if (err) {
       return res.status(500).json({
@@ -115,9 +121,10 @@ router.post("/", (req, res) => {
   });
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const data = req.body;
+
   if (!data.STATUS) {
     return res.status(400).json({
       status: 400,
@@ -137,6 +144,9 @@ router.put("/:id", (req, res) => {
       message: "return_date wajib diisi jika STATUS dikembalikan atau terlambat",
     });
   }
+
+  data.updated_by = req.user.email;
+
   borrowingsModel.updateBorrowing(id, data, (err, result) => {
     if (err) {
       return res.status(500).json({
@@ -158,7 +168,7 @@ router.put("/:id", (req, res) => {
   });
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   borrowingsModel.deleteBorrowing(id, (err, result) => {
     if (err) {
@@ -181,7 +191,7 @@ router.delete("/:id", (req, res) => {
   });
 });
 
-router.delete("/", (req, res) => {
+router.delete("/", verifyToken, (req, res) => {
   borrowingsModel.deleteAllBorrowings((err, result) => {
     if (err) {
       return res.status(500).json({
