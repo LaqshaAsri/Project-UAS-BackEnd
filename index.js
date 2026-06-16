@@ -17,6 +17,13 @@ import categoriesRoute from "./routes/categoriesRoute.js";
 import usersRoute from "./routes/usersRoute.js";
 
 app.use(express.json());
+app.use(express.static("views"));
+app.use("/author", authorsRoute);
+app.use("/books", booksRoute);
+app.use("/borrow", borrowingsRoute);
+app.use("/category", categoriesRoute);
+app.use("/users", usersRoute);
+app.use("/auth", authRoutes);
 
 // Halaman utama -> login.html
 app.get("/", (req, res) => {
@@ -30,6 +37,10 @@ app.get("/register", (req, res) => {
 
 app.get("/guest/books", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "guest.html"));
+});
+
+app.get("/member/books", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "member.html"));
 });
 
 app.get("/admin/:page", (req, res) => {

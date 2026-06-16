@@ -2,7 +2,7 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #1e293b, #3b82f6);
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -37,66 +37,54 @@ input {
   box-sizing: border-box;
 }
 
-.btn-group {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-button {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 13px;
-  font-weight: bold;
-}
-
-.btn-admin {
-  background: #1e293b;
-  color: white;
-}
-.btn-member {
-  background: #3b82f6;
-  color: white;
-}
-button:hover {
-  opacity: 0.88;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 14px 0;
-  color: #94a3b8;
-  font-size: 13px;
-}
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: #e2e8f0;
-}
-
-.btn-guest {
-  width: 100%;
-  background: #f1f5f9;
-  color: #475569;
-  margin-bottom: 4px;
+input:focus {
+  outline: none;
+  border-color: #3b82f6;
 }
 
 .btn-register {
   width: 100%;
+  padding: 10px;
+  margin-top: 12px;
   background: #22c55e;
   color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-register:hover {
+  opacity: 0.9;
+}
+
+.btn-back {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-back:hover {
+  opacity: 0.9;
 }
 
 .error-msg {
   color: #ef4444;
   font-size: 13px;
-  margin-top: 10px;
+  margin-top: 8px;
+  display: none;
+}
+
+.success-msg {
+  color: #22c55e;
+  font-size: 13px;
+  margin-top: 8px;
   display: none;
 }

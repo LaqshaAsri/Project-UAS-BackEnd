@@ -61,7 +61,7 @@ const getUsersByQuery = ({ q, page = 1, limit = 5 }, callback) => {
   });
 };
 
-const createUser = (data, callback) => {
+export const createUser = (data, callback) => {
   let query = "INSERT INTO users SET ?";
   db.query(query, data, (err, result) => {
     callback(err, result);

@@ -299,3 +299,33 @@ th {
   background: #94a3b8;
   cursor: not-allowed;
 }
+
+.btn-borrow {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.btn-borrow:hover {
+  background-color: #27ae60;
+}
+
+.btn-return {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.btn-return:hover {
+  background-color: #c0392b;
+}

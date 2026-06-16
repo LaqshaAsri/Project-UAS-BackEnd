@@ -6,6 +6,8 @@ const getAllBorrowings = (callback) => {
       b.borrowing_id,
       b.user_id,
       u.user_name,
+      b.book_id,
+      bk.title AS book_title,
       b.borrow_date,
       b.return_date,
       b.STATUS,
@@ -14,8 +16,8 @@ const getAllBorrowings = (callback) => {
       b.updated_at,
       b.updated_by
     FROM borrowings b
-    LEFT JOIN users u
-      ON b.user_id = u.user_id
+    LEFT JOIN users u ON b.user_id = u.user_id
+    LEFT JOIN books bk ON b.book_id = bk.book_id
   `;
 
   db.query(query, (err, result) => {
@@ -30,25 +32,30 @@ const getBorrowingById = (id, callback) => {
   });
 };
 
+// Fungsi pencarian khusus untuk member (mengecek buku apa saja yang dipinjam oleh user tertentu)
+const getActiveBorrowingByMember = (userId, bookId, callback) => {
+  let query = "SELECT * FROM borrowings WHERE user_id = ? AND book_id = ? AND STATUS = 'dipinjam' LIMIT 1";
+  db.query(query, [userId, bookId], (err, result) => {
+    if (err) return callback(err);
+    callback(null, result[0] || null);
+  });
+};
+
 const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
   const offset = (page - 1) * limit;
-
   let whereClause = "";
   let values = [];
 
   if (q) {
-    whereClause = `WHERE u.user_name LIKE ? OR b.STATUS LIKE ? OR b.borrow_date LIKE ? OR b.return_date LIKE ?`;
-    values.push(`%${q}%`);
-    values.push(`%${q}%`);
-    values.push(`%${q}%`);
-    values.push(`%${q}%`);
+    whereClause = `WHERE u.user_name LIKE ? OR bk.title LIKE ? OR b.STATUS LIKE ?`;
+    values.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
 
   const countSql = `
     SELECT COUNT(*) AS total
     FROM borrowings b
-    LEFT JOIN users u
-      ON b.user_id = u.user_id
+    LEFT JOIN users u ON b.user_id = u.user_id
+    LEFT JOIN books bk ON b.book_id = bk.book_id
     ${whereClause}
   `;
 
@@ -62,6 +69,8 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
         b.borrowing_id,
         b.user_id,
         u.user_name,
+        b.book_id,
+        bk.title AS book_title,
         b.borrow_date,
         b.return_date,
         b.STATUS,
@@ -70,23 +79,18 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
         b.updated_at,
         b.updated_by
       FROM borrowings b
-      LEFT JOIN users u
-        ON b.user_id = u.user_id
+      LEFT JOIN users u ON b.user_id = u.user_id
+      LEFT JOIN books bk ON b.book_id = bk.book_id
       ${whereClause}
+      ORDER BY b.borrowing_id DESC
       LIMIT ? OFFSET ?
     `;
 
-    const dataValues = [...values];
-    dataValues.push(parseInt(limit));
-    dataValues.push(parseInt(offset));
+    const dataValues = [...values, parseInt(limit), parseInt(offset)];
 
     db.query(dataSql, dataValues, (err, result) => {
       if (err) return callback(err);
-
-      callback(null, {
-        total,
-        data: result,
-      });
+      callback(null, { total, data: result });
     });
   });
 };

@@ -1,8 +1,31 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { findUserByEmail } from "../models/usersModel.js";
+import { findUserByEmail, createUser } from "../models/usersModel.js";
 import usersModel from "../models/usersModel.js";
 const JWT_SECRET = "rahasia-super-aman"; // sebaiknya pindahkan ke .env
+
+export const verifyToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Format: "Bearer <token>"
+
+  if (!token) {
+    return res.status(401).json({
+      status: 401,
+      message: "Akses ditolak, token tidak ditemukan",
+    });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decodedUser) => {
+    if (err) {
+      return res.status(403).json({
+        status: 403,
+        message: "Token tidak valid atau sudah kadaluwarsa",
+      });
+    }
+    req.user = decodedUser; // Menyimpan data user hasil ekstrak ke objek req
+    next();
+  });
+};
 
 export const login = (req, res) => {
   const { email, password } = req.body;
