@@ -30,6 +30,8 @@
           <h2>Daftar Peminjaman</h2>
 
           <div class="header-actions">
+            <input type="number" id="limitInput" class="limit-input" min="1" value="5" />
+            <button onclick="changeLimit()">Pagination</button>
             <input type="text" id="searchBorrowing" placeholder="Cari peminjaman..." />
             <button onclick="searchBorrowings()">Cari</button>
             <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Peminjaman</button>

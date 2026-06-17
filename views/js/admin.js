@@ -3,7 +3,7 @@ const API_BASE = "http://localhost:1140";
 let totalData = 0;
 let totalPages = 1;
 let currentPage = 1;
-let currentLimit = 2;
+let currentLimit = 5;
 let currentSearch = "";
 
 function setupUserInfo() {
@@ -68,6 +68,38 @@ function setActiveNavbar() {
     }
   });
 }
+
+function changeLimit() {
+  const input = document.getElementById("limitInput");
+
+  const value = parseInt(input.value);
+
+  if (isNaN(value) || value < 1) {
+    alert("Jumlah data harus lebih dari 0");
+    return;
+  }
+
+  currentLimit = value;
+  currentPage = 1;
+
+  if (typeof loadBooks === "function") {
+    loadBooks(currentPage, currentSearch);
+  } else if (typeof loadAuthors === "function") {
+    loadAuthors(currentPage, currentSearch);
+  } else if (typeof loadCategories === "function") {
+    loadCategories(currentPage, currentSearch);
+  } else if (typeof loadBorrowings === "function") {
+    loadBorrowings(currentPage, currentSearch);
+  } else if (typeof loadUsers === "function") {
+    loadUsers(currentPage, currentSearch);
+  }
+}
+
+document.getElementById("limitInput").addEventListener("keypress", function (e) {
+  if (e.key === "Enter") {
+    changeLimit();
+  }
+});
 
 function renderPagination() {
   const pagination = document.getElementById("pagination");

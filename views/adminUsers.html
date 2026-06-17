@@ -29,6 +29,8 @@
         <div class="card-header">
           <h2>Daftar User</h2>
           <div class="header-actions">
+            <input type="number" id="limitInput" class="limit-input" min="1" value="5" />
+            <button onclick="changeLimit()">Pagination</button>
             <input type="text" id="searchUser" placeholder="Cari user..." />
             <button onclick="searchUsers()">Cari</button>
             <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah User</button>
@@ -70,19 +72,19 @@
         <input type="hidden" id="userId" />
 
         <label>Username</label>
-        <input type="text" id="user_name" />
+        <input type="text" id="user_name" placeholder="Nama User" />
 
         <label>Email</label>
-        <input type="email" id="user_email" />
+        <input type="email" id="user_email" placeholder="nama@gmail.com" />
 
         <label class="password-col">Password</label>
-        <input type="password" id="user_password" />
+        <input type="password" id="user_password" placeholder="password" />
 
         <label>No. Telepon</label>
-        <input type="text" id="user_phone" />
+        <input type="text" id="user_phone" placeholder="08123456789" />
 
         <label>Alamat</label>
-        <input type="text" id="user_address" />
+        <input type="text" id="user_address" placeholder="Jakarta" />
 
         <label>Role</label>
         <input type="text" id="role" placeholder="admin / user" />

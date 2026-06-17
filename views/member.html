@@ -25,6 +25,8 @@
         <div class="card-header">
           <h2>Daftar Buku</h2>
           <div class="header-actions">
+            <input type="number" id="limitInput" class="limit-input" min="1" value="5" />
+            <button onclick="changeLimit()">Pagination</button>
             <input type="text" id="searchBook" placeholder="Cari book..." />
             <button onclick="searchBooks()">Cari</button>
           </div>
@@ -32,7 +34,7 @@
         <table id="bookTable">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>No</th>
               <th>Judul</th>
               <th>Author</th>
               <th>Kategori</th>
@@ -90,12 +92,12 @@
           }
 
           tbody.innerHTML = "";
-          books.forEach((book) => {
+          books.forEach((book, index) => {
             const isCurrentlyBorrowed = activeBorrowings.some((b) => b.book_id === book.book_id);
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
-              <td>${book.book_id ?? "-"}</td>
+              <td>${(currentPage - 1) * currentLimit + index + 1}</td>
               <td>${book.title ?? "-"}</td>
               <td>${book.author_name ?? "-"}</td>
               <td>${book.category_name ?? "-"}</td>

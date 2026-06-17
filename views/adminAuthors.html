@@ -29,6 +29,8 @@
         <div class="card-header">
           <h2>Daftar Author</h2>
           <div class="header-actions">
+            <input type="number" id="limitInput" class="limit-input" min="1" value="5" />
+            <button onclick="changeLimit()">Pagination</button>
             <input type="text" id="searchAuthor" placeholder="Cari author..." />
             <button onclick="searchAuthors()">Cari</button>
             <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Author</button>
@@ -67,7 +69,7 @@
         <input type="text" id="author_name" placeholder="Nama Author" />
 
         <label>Negara Author</label>
-        <input type="number" id="author_country" placeholder="Indonesia" />
+        <input type="text" id="author_country" placeholder="Indonesia" />
 
         <div class="modal-actions">
           <button class="cancel-btn" onclick="closeModal()">Batal</button>
