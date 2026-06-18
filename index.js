@@ -60,15 +60,6 @@ app.get("/admin/:page", (req, res) => {
   res.sendFile(path.join(__dirname, "views", file));
 });
 
-app.use(express.static(path.join(__dirname, "views")));
-
-app.use("/author", authorsRoute);
-app.use("/books", booksRoute);
-app.use("/borrow", borrowingsRoute);
-app.use("/category", categoriesRoute);
-app.use("/users", usersRoute);
-app.use("/auth", authRoutes);
-
 app.listen(port, () => {
   console.log(`Server running at ${hostname}:${port}`);
 });

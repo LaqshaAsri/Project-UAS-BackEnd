@@ -98,6 +98,108 @@ router.get("/:id", (req, res) => {
   });
 });
 
+// Proses pinjam buku
+router.post("/borrowing", verifyToken, (req, res) => {
+  const { book_id } = req.body;
+  const user_id = req.user.id;
+  const user_role = req.user.role;
+  const email_user = req.user.email;
+
+  if (user_role !== "user") {
+    return res.status(403).json({
+      status: 403,
+      message: "Akses ditolak, hanya akun member yang boleh meminjam buku",
+    });
+  }
+
+  if (!book_id) {
+    return res.status(400).json({ status: 400, message: "book_id wajib disertakan" });
+  }
+
+  const borrowDate = new Date();
+  const returnLimitDate = new Date();
+  returnLimitDate.setDate(borrowDate.getDate() + 7);
+
+  const formatDate = (date) => date.toISOString().split("T")[0];
+
+  const dataPeminjaman = {
+    user_id,
+    book_id,
+    borrow_date: formatDate(borrowDate),
+    return_date: formatDate(returnLimitDate),
+    STATUS: "dipinjam",
+    created_by: email_user || "Member",
+    updated_by: email_user || "Member",
+  };
+
+  borrowingsModel.createBorrowing(dataPeminjaman, (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        status: 500,
+        message: "Gagal memproses peminjaman pada database",
+        error: err.message,
+      });
+    }
+    res.status(201).json({
+      status: 201,
+      message: "Buku berhasil dipinjam secara otomatis!",
+      id: result.insertId,
+    });
+  });
+});
+
+// Proses Kembalikan buku
+router.post("/returning", verifyToken, (req, res) => {
+  const { book_id } = req.body;
+  const user_id = req.user.id;
+  const email_user = req.user.email;
+
+  if (!book_id) {
+    return res.status(400).json({ status: 400, message: "book_id wajib disertakan" });
+  }
+
+  const cleanBookId = parseInt(book_id, 10);
+  borrowingsModel.getActiveBorrowingByMember(user_id, book_id, (err, borrowing) => {
+    if (err) {
+      return res.status(500).json({ status: 500, message: "Kesalahan server database", error: err.message });
+    }
+
+    if (!borrowing) {
+      return res.status(404).json({
+        status: 404,
+        message: "Riwayat peminjaman aktif tidak ditemukan untuk akun Anda pada buku ini",
+      });
+    }
+
+    const hariIni = new Date();
+    const batasPengembalian = new Date(borrowing.return_date);
+
+    let statusAkhir = "dikembalikan";
+    if (hariIni > batasPengembalian) {
+      statusAkhir = "terlambat";
+    }
+
+    const tanggalKembaliAktual = hariIni.toISOString().split("T")[0];
+
+    const dataUpdate = {
+      return_date: tanggalKembaliAktual,
+      STATUS: statusAkhir,
+      updated_by: email_user || "Member",
+    };
+
+    borrowingsModel.updateBorrowing(borrowing.borrowing_id, dataUpdate, (err, result) => {
+      if (err) {
+        return res.status(500).json({ status: 500, message: "Gagal memperbarui status pengembalian", error: err.message });
+      }
+      res.status(200).json({
+        status: 200,
+        message: statusAkhir === "terlambat" ? "Buku berhasil dikembalikan, namun status Anda TERLAMBAT!" : "Buku dikembalikan tepat waktu!",
+        status: statusAkhir,
+      });
+    });
+  });
+});
+
 router.post("/", verifyToken, (req, res) => {
   const data = req.body;
 

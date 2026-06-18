@@ -96,9 +96,12 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
 };
 
 const createBorrowing = (data, callback) => {
-  let query = "INSERT INTO borrowings (user_id, borrow_date, return_date, STATUS, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)";
-  let returnDate = data.return_date ? data.return_date : null;
-  db.query(query, [data.user_id, data.borrow_date, returnDate, data.STATUS, data.created_by, data.updated_by], (err, result) => {
+  let query = `
+    INSERT INTO borrowings 
+      (user_id, book_id, borrow_date, return_date, STATUS, created_by, updated_by) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  db.query(query, [data.user_id, data.book_id, data.borrow_date, data.return_date, data.STATUS, data.created_by, data.updated_by], (err, result) => {
     callback(err, result);
   });
 };
@@ -125,4 +128,4 @@ const deleteAllBorrowings = (callback) => {
   });
 };
 
-export default { getAllBorrowings, getBorrowingById, getBorrowingsByQuery, createBorrowing, updateBorrowing, deleteBorrowing, deleteAllBorrowings };
+export default { getAllBorrowings, getBorrowingById, getActiveBorrowingByMember, getBorrowingsByQuery, createBorrowing, updateBorrowing, deleteBorrowing, deleteAllBorrowings };
