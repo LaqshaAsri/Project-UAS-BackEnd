@@ -17,7 +17,7 @@
 
 ## Panduan Setup:
 
-1. Download Folder UAS yang ada di OneDrive dengan isi utama:
+1. Download Folder UAS yang ada di OneDrive
 2. Import terlebih dahulu file init.sql di database phpmyadmin agar database terbentuk
 3. Lalu masuk ke folder UAS yang telah di download dan lakukan perintah (npm i) karena package.json sudah tersedia maka npm otomatis menginstal semua library yg sudah ada di package.json
 4. Run program menggunakan "node index.js" atau "nodemon index.js"
