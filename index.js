@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const hostname = "localhost";
-const port = 1140;
+const port = process.env.PORT || 1140;
 
 app.use(express.json());
 app.use(express.static("views"));

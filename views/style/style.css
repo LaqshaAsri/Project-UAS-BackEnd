@@ -277,13 +277,6 @@ th {
   color: white;
 }
 
-.password-col {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .pagination {
   margin-top: 15px;
   display: flex;
