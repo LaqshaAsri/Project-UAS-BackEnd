@@ -61,5 +61,5 @@ app.get("/admin/:page", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at ${hostname}:${port}`);
+  console.log(`Server running at http://${hostname}:${port}`);
 });
