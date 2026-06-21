@@ -1,3 +1,18 @@
+const role = localStorage.getItem("role");
+const path = window.location.pathname;
+
+if (role === "admin" && (path === "/member/books" || path === "/guest/books")) {
+  window.location.href = "/admin/books";
+}
+
+if (role === "user" && (path === "/admin/books" || path === "/admin/author" || path === "/admin/category" || path === "/admin/users" || path === "/admin/borrow" || path === "/guest/books")) {
+  window.location.href = "/member/books";
+}
+
+if ((!role || role === "guest") && (path === "/admin/books" || path === "/admin/author" || path === "/admin/category" || path === "/admin/users" || path === "/admin/borrow" || path === "/member/books")) {
+  window.location.href = "/guest/books";
+}
+
 const API_BASE = "http://localhost:1140";
 
 let totalData = 0;
