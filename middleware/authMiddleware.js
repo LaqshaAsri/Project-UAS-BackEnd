@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = "rahasia-super-aman"; // harus sama dengan yang dipakai di authController.js
+import "dotenv/config";
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;

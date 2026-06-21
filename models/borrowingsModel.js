@@ -34,7 +34,8 @@ const getBorrowingById = (id, callback) => {
 
 // Fungsi pencarian khusus untuk member (mengecek buku apa saja yang dipinjam oleh user tertentu)
 const getActiveBorrowingByMember = (userId, bookId, callback) => {
-  let query = "SELECT * FROM borrowings WHERE user_id = ? AND book_id = ? AND STATUS = 'dipinjam' LIMIT 1";
+  let query =
+    "SELECT * FROM borrowings WHERE user_id = ? AND book_id = ? AND STATUS = 'dipinjam' LIMIT 1";
   db.query(query, [userId, bookId], (err, result) => {
     if (err) return callback(err);
     callback(null, result[0] || null);
@@ -96,16 +97,33 @@ const getBorrowingsByQuery = ({ q, page = 1, limit = 5 }, callback) => {
 };
 
 const createBorrowing = (data, callback) => {
-  let query = "INSERT INTO borrowings (user_id, borrow_date, return_date, STATUS, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)";
-  let returnDate = data.return_date ? data.return_date : null;
-  db.query(query, [data.user_id, data.borrow_date, returnDate, data.STATUS, data.created_by, data.updated_by], (err, result) => {
-    callback(err, result);
-  });
+  let query = `
+    INSERT INTO borrowings 
+      (user_id, book_id, borrow_date, return_date, STATUS, created_by, updated_by) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  const returnDate = data.return_date ? data.return_date : null;
+  db.query(
+    query,
+    [
+      data.user_id,
+      data.book_id,
+      data.borrow_date,
+      returnDate,
+      data.STATUS,
+      data.created_by,
+      data.updated_by,
+    ],
+    (err, result) => {
+      callback(err, result);
+    }
+  );
 };
 
 const updateBorrowing = (id, data, callback) => {
-  let query = "UPDATE borrowings SET return_date = ?, STATUS = ?, updated_by = ? WHERE borrowing_id = ?";
-  let returnDate = data.return_date ? data.return_date : null;
+  let query =
+    "UPDATE borrowings SET return_date = ?, STATUS = ?, updated_by = ? WHERE borrowing_id = ?";
+  const returnDate = data.return_date ? data.return_date : null;
   db.query(query, [returnDate, data.STATUS, data.updated_by, id], (err, result) => {
     callback(err, result);
   });
@@ -125,4 +143,13 @@ const deleteAllBorrowings = (callback) => {
   });
 };
 
-export default { getAllBorrowings, getBorrowingById, getBorrowingsByQuery, createBorrowing, updateBorrowing, deleteBorrowing, deleteAllBorrowings };
+export default {
+  getAllBorrowings,
+  getBorrowingById,
+  getActiveBorrowingByMember,
+  getBorrowingsByQuery,
+  createBorrowing,
+  updateBorrowing,
+  deleteBorrowing,
+  deleteAllBorrowings,
+};
