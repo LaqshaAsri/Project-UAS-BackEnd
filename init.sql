@@ -51,8 +51,12 @@ CREATE TABLE books (
     created_by VARCHAR(45),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_by VARCHAR(45),
-    FOREIGN KEY (author_id) REFERENCES authors(author_id) ON DELETE SET NULL ON UPDATE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL ON UPDATE CASCADE
+    FOREIGN KEY (author_id) REFERENCES authors(author_id) ON DELETE
+    SET
+        NULL ON UPDATE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE
+    SET
+        NULL ON UPDATE CASCADE
 );
 
 -- Tabel Borrowings
@@ -73,7 +77,6 @@ CREATE TABLE borrowings (
 
 -- Contoh Data
 -- Users
--- PENTING: ganti '$PASSWORD_HASH' di bawah dengan hasil hash dari generateHash.js
 INSERT INTO
     users (
         user_name,
@@ -98,31 +101,7 @@ VALUES
         '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK',
         '08231434521',
         'Jakarta',
-        'user'
-    ),
-    (
-        'Marcellino',
-        'marcellino@gmail.com',
-        '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK',
-        '08231434522',
-        'Kalimantan',
-        'user'
-    ),
-    (
-        'Ziham',
-        'ziham@gmail.com',
-        '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK',
-        '08231434523',
-        'Maluku',
-        'user'
-    ),
-    (
-        'Andi',
-        'andi@gmail.com',
-        '$2b$10$QJqgRQotA6Cx4E92mPn/2eNaE4yy9udTfrUEvuwGHmtpvc6x/.XBK',
-        '08231434524',
-        'Bali',
-        'user'
+        'admin'
     );
 
 -- Authors
