@@ -1,6 +1,12 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import authRoutes from "./routes/authRoute.js";
+import authorsRoute from "./routes/authorsRoute.js";
+import booksRoute from "./routes/booksRoute.js";
+import borrowingsRoute from "./routes/borrowingsRoute.js";
+import categoriesRoute from "./routes/categoriesRoute.js";
+import usersRoute from "./routes/usersRoute.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -8,13 +14,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const hostname = "localhost";
 const port = 1140;
-
-import authRoutes from "./routes/authRoute.js";
-import authorsRoute from "./routes/authorsRoute.js";
-import booksRoute from "./routes/booksRoute.js";
-import borrowingsRoute from "./routes/borrowingsRoute.js";
-import categoriesRoute from "./routes/categoriesRoute.js";
-import usersRoute from "./routes/usersRoute.js";
 
 app.use(express.json());
 app.use(express.static("views"));
