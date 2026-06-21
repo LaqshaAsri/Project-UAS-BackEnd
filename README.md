@@ -13,11 +13,11 @@
 | Tubagus Arsad     | 241112424 | - Membuat Front-End dan Back-End untuk Login & Register                                                                                                                              |
 | Laqsha Asri       | 241112227 | - Setup Project <br>- Membuat tampilan setiap tabel untuk setiap role (Admin, Member, Guest) dan menampilkan datanya <br>- Filter dan Pagination <br>- Membuat fitur peminjaman buku |
 | Ahmad Ziham       | 241111879 | - Membuat CRUD untuk tiap tabel                                                                                                                                                      |
-| Marcellino Tanaka | 241111160 | - Edit Video <br> Dokumentasi Word                                                                                                                                                   |
+| Marcellino Tanaka | 241111160 | - Edit Video <br>- Dokumentasi Word                                                                                                                                                   |
 
 ## Panduan Setup:
 
-1. Download Folder UAS yang ada di OneDrive dengan isi utama:
+1. Download Folder UAS yang ada di OneDrive
 2. Import terlebih dahulu file init.sql di database phpmyadmin agar database terbentuk
 3. Lalu masuk ke folder UAS yang telah di download dan lakukan perintah (npm i) karena package.json sudah tersedia maka npm otomatis menginstal semua library yg sudah ada di package.json
 4. Run program menggunakan "node index.js" atau "nodemon index.js"
