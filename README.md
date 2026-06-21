@@ -23,8 +23,6 @@
 4. Run program menggunakan "node index.js" atau "nodemon index.js"
 5. Server akan berjalan di: http://127.0.0.1:1140  
    • Program sudah bisa diuji di Web Browser
-6. Server akan berjalan di: http://127.0.0.1:1140  
-   • Program sudah bisa diuji di Web Browser
-7. Notes:
+6. Notes:  
    • Pastikan MySQL sudah berjalan (Apache✔️, MySQL✔️)
    • Pastikan port tidak tabrakan
