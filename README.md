@@ -20,9 +20,10 @@
 1. Download Folder UAS yang ada di OneDrive
 2. Import terlebih dahulu file init.sql di database phpmyadmin agar database terbentuk
 3. Lalu masuk ke folder UAS yang telah di download dan lakukan perintah (npm i) karena package.json sudah tersedia maka npm otomatis menginstal semua library yg sudah ada di package.json
-4. Run program menggunakan "node index.js" atau "nodemon index.js"
-5. Server akan berjalan di: http://127.0.0.1:1140  
+4. Ubah nama file .env.example menjadi .env dan JWT_SECRET diisi oleh secret key sendiri
+5. Run program menggunakan "node index.js" atau "nodemon index.js"
+6. Server akan berjalan di: http://localhost:1140  
    • Program sudah bisa diuji di Web Browser
-6. Notes:
-   • Pastikan MySQL sudah berjalan (Apache✔️, MySQL✔️)
+7. Notes:  
+   • Pastikan MySQL sudah berjalan (Apache✔️, MySQL✔️)  
    • Pastikan port tidak tabrakan
