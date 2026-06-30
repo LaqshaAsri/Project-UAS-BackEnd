@@ -13,7 +13,7 @@ if ((!role || role === "guest") && (path === "/admin/books" || path === "/admin/
   window.location.href = "/guest/books";
 }
 
-const API_BASE = "http://localhost:1140";
+const API_BASE = window.location.origin;
 
 let totalData = 0;
 let totalPages = 1;

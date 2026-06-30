@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:1140";
+const API_BASE = window.location.origin;
 
 async function loginAs(expectedRole) {
   const email = document.getElementById("email").value;

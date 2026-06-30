@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:1140";
+const API_BASE = window.location.origin;
 
 async function register() {
   const user_name = document.getElementById("user_name").value.trim();
