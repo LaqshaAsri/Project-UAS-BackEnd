@@ -36,28 +36,30 @@
             <button class="add-btn" id="addBtn" onclick="openModal()">+ Tambah Buku</button>
           </div>
         </div>
-        <table id="bookTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Judul</th>
-              <th>Author</th>
-              <th>Kategori</th>
-              <th>Tahun Publikasi</th>
-              <th>Stok</th>
-              <th>Dibuat Pada</th>
-              <th>Dibuat Oleh</th>
-              <th>Diperbarui Pada</th>
-              <th>Diperbarui Oleh</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="bookBody">
-            <tr>
-              <td colspan="5" class="empty">Memuat data...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table id="bookTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Judul</th>
+                <th>Author</th>
+                <th>Kategori</th>
+                <th>Tahun Publikasi</th>
+                <th>Stok</th>
+                <th>Dibuat Pada</th>
+                <th>Dibuat Oleh</th>
+                <th>Diperbarui Pada</th>
+                <th>Diperbarui Oleh</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="bookBody">
+              <tr>
+                <td colspan="5" class="empty">Memuat data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div id="pagination" class="pagination"></div>
         <p class="error-msg" id="errorMsg" style="display: none"></p>
       </div>
